@@ -1,0 +1,1729 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width,initial-scale=1"/>
+<meta name="theme-color" content="#0F172A"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<title>MyDailyQuest — Life RPG</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Share+Tech+Mono&family=Nunito:wght@400;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.js"></script>
+<style>
+/* ============ TOKENS ============ */
+:root{
+  --bg0:#0F172A;--bg1:#131929;--bg2:#172035;--bg3:#1E2A40;
+  --panel:#1A2236;--panel2:#1F2A42;
+  --cyan:#22D3EE;--cyan2:#0EA5E9;--cyan-dim:rgba(34,211,238,.10);
+  --purple:#A78BFA;--purple2:#7C3AED;--purple-dim:rgba(167,139,250,.10);
+  --green:#34D399;--green2:#059669;--green-dim:rgba(52,211,153,.10);
+  --amber:#FBBF24;--amber-dim:rgba(251,191,36,.10);
+  --red:#F87171;--red-dim:rgba(248,113,113,.10);
+  --text:#E2E8F0;--text2:#94A3B8;--text3:#475569;
+  --border:rgba(34,211,238,.10);--border2:rgba(34,211,238,.22);
+  --nav-h:62px;--hdr-h:52px;
+  --font-hud:'Rajdhani',sans-serif;--font-mono:'Share Tech Mono',monospace;--font-body:'Nunito',sans-serif;
+  --glow-c:0 0 14px rgba(34,211,238,.35);--glow-p:0 0 14px rgba(167,139,250,.35);
+  --glow-g:0 0 14px rgba(52,211,153,.35);--glow-a:0 0 14px rgba(251,191,36,.35);
+  --radius:12px;--transition:.2s cubic-bezier(.4,0,.2,1);
+}
+body.light{
+  --bg0:#F1F5F9;--bg1:#E8EDF5;--bg2:#DDE4F0;--bg3:#C8D3E8;
+  --panel:#FFFFFF;--panel2:#F8FAFC;
+  --text:#0F172A;--text2:#475569;--text3:#94A3B8;
+  --border:rgba(34,211,238,.18);--border2:rgba(34,211,238,.32);
+}
+/* ============ RESET ============ */
+*{margin:0;padding:0;box-sizing:border-box}
+html{height:100%}
+body{font-family:var(--font-body);color:var(--text);background:var(--bg0);height:100%;overflow:hidden;transition:background var(--transition),color var(--transition)}
+/* ============ LAYOUT ============ */
+#app{display:flex;flex-direction:column;height:100vh;height:100dvh;max-width:600px;margin:0 auto;position:relative}
+#hdr{height:var(--hdr-h);background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 14px;gap:8px;flex-shrink:0;z-index:50;position:relative}
+#hdr::after{content:'';position:absolute;bottom:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
+#main{flex:1;overflow-y:auto;overflow-x:hidden;-webkit-overflow-scrolling:touch;padding-bottom:calc(var(--nav-h) + 20px);min-height:0;scroll-behavior:smooth}
+#nav{height:var(--nav-h);background:var(--bg1);border-top:1px solid var(--border);position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:100%;max-width:600px;z-index:100;display:flex;align-items:stretch}
+#nav::before{content:'';position:absolute;top:0;left:0;right:0;height:1px;background:linear-gradient(90deg,transparent,var(--cyan),transparent);opacity:.5}
+/* ============ NAV ============ */
+.nav-item{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:2px;background:none;border:none;cursor:pointer;color:var(--text3);font-family:var(--font-hud);font-size:10px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;transition:color var(--transition);-webkit-tap-highlight-color:transparent;position:relative;overflow:hidden;padding:0}
+.nav-item .nav-icon{font-size:19px;line-height:1;transition:transform var(--transition)}
+.nav-item.active{color:var(--cyan)}
+.nav-item.active .nav-icon{transform:scale(1.12)}
+.nav-item.active::before{content:'';position:absolute;top:0;left:50%;transform:translateX(-50%);width:34px;height:2px;background:var(--cyan);border-radius:0 0 6px 6px;box-shadow:var(--glow-c)}
+/* ============ PAGES ============ */
+.page{display:none;padding:12px 14px 8px;animation:fadeSlide .2s ease}
+.page.active{display:block}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:translateY(0)}}
+/* ============ PANELS ============ */
+.panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);padding:14px;margin-bottom:12px;position:relative;overflow:hidden}
+.panel::before{content:'';position:absolute;top:0;left:0;width:3px;height:100%;background:var(--cyan)}
+.panel.p-purple::before{background:var(--purple)}
+.panel.p-green::before{background:var(--green)}
+.panel.p-amber::before{background:var(--amber)}
+.panel.p-red::before{background:var(--red)}
+.panel.p-none::before{display:none}
+/* ============ SEC TITLE ============ */
+.sec{font-family:var(--font-hud);font-size:11px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.10em;margin-bottom:10px;display:flex;align-items:center;gap:6px}
+.sec::after{content:'';flex:1;height:1px;background:linear-gradient(90deg,var(--border),transparent)}
+.sec.s-purple{color:var(--purple)}.sec.s-green{color:var(--green)}.sec.s-amber{color:var(--amber)}.sec.s-red{color:var(--red)}
+/* ============ HEADER ============ */
+.hud-logo{font-family:var(--font-hud);font-size:17px;font-weight:700;color:var(--cyan);letter-spacing:.06em}
+.hud-logo span{color:var(--purple)}
+.hdr-right{margin-left:auto;display:flex;align-items:center;gap:6px}
+.hdr-btn{width:32px;height:32px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;color:var(--text2);cursor:pointer;transition:all var(--transition);position:relative;-webkit-tap-highlight-color:transparent}
+.hdr-btn:active{transform:scale(.92)}
+.notif-badge{position:absolute;top:-4px;right:-4px;background:var(--red);color:#fff;font-family:var(--font-hud);font-size:9px;font-weight:700;width:16px;height:16px;border-radius:50%;display:none;align-items:center;justify-content:center}
+.notif-badge.show{display:flex}
+/* ============ GREET ============ */
+.greet-card{background:linear-gradient(135deg,var(--bg2),var(--bg3));border:1px solid var(--border2);border-radius:14px;padding:16px;margin-bottom:10px;position:relative;overflow:hidden}
+.greet-card::after{content:'';position:absolute;right:-30px;top:-30px;width:120px;height:120px;background:radial-gradient(circle,rgba(34,211,238,.07),transparent 70%);pointer-events:none}
+.greet-name{font-family:var(--font-hud);font-size:19px;font-weight:700;color:var(--text)}
+.greet-time{font-family:var(--font-mono);font-size:11px;color:var(--cyan);margin-top:2px}
+.greet-quote{font-size:12px;color:var(--text2);margin-top:7px;line-height:1.6;font-style:italic;border-left:2px solid var(--purple);padding-left:8px}
+/* ============ LEVEL/XP ============ */
+.level-card{background:var(--panel);border:1px solid var(--border2);border-radius:14px;padding:14px;margin-bottom:10px}
+.level-row{display:flex;align-items:center;gap:10px;margin-bottom:10px}
+.level-badge{font-family:var(--font-hud);font-size:13px;font-weight:700;color:#0F172A;background:var(--cyan);padding:4px 12px;border-radius:5px;letter-spacing:.05em;display:inline-flex;align-items:center;gap:4px;box-shadow:var(--glow-c)}
+.level-badge.lv-purple{background:var(--purple);box-shadow:var(--glow-p)}
+.level-badge.lv-green{background:var(--green);box-shadow:var(--glow-g)}
+.level-badge.lv-amber{background:var(--amber);box-shadow:var(--glow-a)}
+.xp-track{height:8px;background:var(--bg3);border-radius:99px;overflow:hidden;border:1px solid var(--border)}
+.xp-fill{height:100%;background:linear-gradient(90deg,var(--cyan2),var(--cyan));border-radius:99px;transition:width .5s ease}
+.streak-badge{font-family:var(--font-hud);font-size:20px;font-weight:700;color:var(--amber)}
+/* ============ STAT TILES ============ */
+.stat-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:10px}
+.stat-tile{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;position:relative;overflow:hidden}
+.stat-tile.t-cyan{border-color:rgba(34,211,238,.2)}.stat-tile.t-purple{border-color:rgba(167,139,250,.2)}
+.stat-tile.t-green{border-color:rgba(52,211,153,.2)}.stat-tile.t-amber{border-color:rgba(251,191,36,.2)}
+.stat-val{font-family:var(--font-hud);font-size:26px;font-weight:700;line-height:1}
+.stat-tile.t-cyan .stat-val{color:var(--cyan)}.stat-tile.t-purple .stat-val{color:var(--purple)}
+.stat-tile.t-green .stat-val{color:var(--green)}.stat-tile.t-amber .stat-val{color:var(--amber)}
+.stat-lbl{font-size:11px;color:var(--text3);margin-top:3px;font-weight:600;text-transform:uppercase;letter-spacing:.04em}
+.stat-icon{position:absolute;right:10px;top:10px;font-size:20px;opacity:.12}
+/* ============ PROGRESS BARS ============ */
+.prog-wrap{margin-bottom:8px}
+.prog-row{display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px;color:var(--text2)}
+.prog-row span:last-child{font-family:var(--font-mono);color:var(--cyan)}
+.prog-bar{height:6px;background:var(--bg3);border-radius:99px;overflow:hidden}
+.prog-fill{height:100%;border-radius:99px;transition:width .4s ease}
+.pf-cyan{background:linear-gradient(90deg,var(--cyan2),var(--cyan))}
+.pf-purple{background:linear-gradient(90deg,var(--purple2),var(--purple))}
+.pf-green{background:linear-gradient(90deg,var(--green2),var(--green))}
+.pf-amber{background:linear-gradient(90deg,#B45309,var(--amber))}
+.pf-red{background:linear-gradient(90deg,#dc2626,var(--red))}
+/* ============ HABIT ============ */
+.habit-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border)}
+.habit-row:last-child{border:none}
+.hchk{width:26px;height:26px;border-radius:6px;border:1px solid var(--border2);background:var(--bg3);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-size:13px;-webkit-tap-highlight-color:transparent;user-select:none}
+.hchk.on{background:var(--cyan);border-color:var(--cyan);box-shadow:var(--glow-c);color:#0F172A}
+.hlabel{flex:1;font-size:14px;font-weight:600}
+.hlabel.on{text-decoration:line-through;color:var(--text3)}
+.hxp{font-family:var(--font-mono);font-size:11px;color:var(--cyan);background:var(--cyan-dim);padding:2px 7px;border-radius:4px;border:1px solid rgba(34,211,238,.15);white-space:nowrap}
+.h-acts{display:flex;gap:4px}
+/* ============ FORMS ============ */
+.f-row{display:flex;flex-direction:column;gap:4px;margin-bottom:12px}
+.f-lbl{font-family:var(--font-hud);font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.06em}
+input,select,textarea{width:100%;padding:9px 12px;background:var(--bg3);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--font-body);font-size:14px;outline:none;transition:border .2s;-webkit-appearance:none;appearance:none}
+input:focus,select:focus,textarea:focus{border-color:var(--cyan);box-shadow:0 0 0 2px rgba(34,211,238,.1)}
+select option{background:var(--bg2)}
+textarea{resize:vertical;min-height:72px}
+/* ============ MODAL ============ */
+.overlay{position:fixed;inset:0;background:rgba(0,0,0,.65);z-index:200;display:none;align-items:flex-end;justify-content:center;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.modal{background:var(--bg2);border:1px solid var(--border2);border-radius:20px 20px 0 0;padding:20px 16px 36px;width:100%;max-width:520px;max-height:92vh;overflow-y:auto;animation:slideUp .22s cubic-bezier(.4,0,.2,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-hd{font-family:var(--font-hud);font-size:15px;font-weight:700;color:var(--cyan);text-transform:uppercase;letter-spacing:.08em;margin-bottom:14px;padding-bottom:10px;border-bottom:1px solid var(--border)}
+/* ============ TABS ============ */
+.tabs{display:flex;gap:6px;margin-bottom:12px;overflow-x:auto;scrollbar-width:none;-webkit-overflow-scrolling:touch}
+.tabs::-webkit-scrollbar{display:none}
+.tab{font-family:var(--font-hud);padding:6px 13px;border-radius:6px;font-size:11px;font-weight:700;letter-spacing:.05em;white-space:nowrap;background:var(--bg3);color:var(--text2);border:1px solid var(--border);cursor:pointer;text-transform:uppercase;transition:all .18s;-webkit-tap-highlight-color:transparent}
+.tab.active{background:var(--cyan-dim);color:var(--cyan);border-color:rgba(34,211,238,.3)}
+/* ============ TOGGLE ============ */
+.toggle{width:44px;height:24px;border-radius:99px;background:var(--bg3);border:1px solid var(--border);position:relative;cursor:pointer;transition:all .25s;flex-shrink:0;-webkit-tap-highlight-color:transparent}
+.toggle::after{content:'';position:absolute;left:2px;top:2px;width:18px;height:18px;border-radius:50%;background:var(--text3);transition:all .25s}
+.toggle.on{background:var(--cyan-dim);border-color:var(--cyan)}
+.toggle.on::after{left:calc(100% - 20px);background:var(--cyan);box-shadow:var(--glow-c)}
+/* ============ IBADAH ============ */
+.ib-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:1px solid var(--border)}
+.ib-row:last-child{border:none}
+.ib-name{font-size:14px;font-weight:600}
+/* ============ BUTTONS ============ */
+.btn{font-family:var(--font-hud);font-size:13px;font-weight:700;letter-spacing:.05em;padding:9px 16px;border-radius:8px;border:none;cursor:pointer;transition:all .18s;text-transform:uppercase;display:inline-flex;align-items:center;justify-content:center;gap:6px;-webkit-tap-highlight-color:transparent;user-select:none}
+.btn:active{transform:scale(.96)}
+.btn-cyan{background:var(--cyan);color:#0F172A}
+.btn-ghost{background:var(--bg3);color:var(--text2);border:1px solid var(--border)}
+.btn-red{background:var(--red-dim);color:var(--red);border:1px solid rgba(248,113,113,.2)}
+.btn-green{background:var(--green-dim);color:var(--green);border:1px solid rgba(52,211,153,.2)}
+.btn-amber{background:var(--amber-dim);color:var(--amber);border:1px solid rgba(251,191,36,.2)}
+.btn-purple{background:var(--purple-dim);color:var(--purple);border:1px solid rgba(167,139,250,.2)}
+.btn-sm{padding:5px 10px;font-size:11px}
+.btn-full{width:100%}
+.btn-icon{background:none;border:none;cursor:pointer;font-size:15px;color:var(--text3);padding:4px 5px;border-radius:6px;transition:color var(--transition);-webkit-tap-highlight-color:transparent;flex-shrink:0}
+.btn-icon:active{color:var(--cyan)}
+/* ============ FINANCE ============ */
+.fin-card{background:linear-gradient(135deg,rgba(5,150,105,.18),rgba(14,165,233,.08));border:1px solid rgba(52,211,153,.22);border-radius:14px;padding:16px;margin-bottom:12px}
+.fin-bal-lbl{font-family:var(--font-hud);font-size:11px;color:var(--green);text-transform:uppercase;letter-spacing:.10em}
+.fin-bal-val{font-family:var(--font-hud);font-size:30px;font-weight:700;color:var(--green);text-shadow:var(--glow-g)}
+.fin-row{display:flex;align-items:center;gap:10px;padding:9px 0;border-bottom:1px solid var(--border)}
+.fin-row:last-child{border:none}
+.fin-ico{width:34px;height:34px;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px;flex-shrink:0}
+.fi-in{background:var(--green-dim)}.fi-out{background:var(--red-dim)}
+.fin-amt{font-family:var(--font-mono);font-size:13px;font-weight:700}
+.fin-amt.in{color:var(--green)}.fin-amt.out{color:var(--red)}
+/* ============ HEALTH ============ */
+.health-row{display:flex;align-items:center;gap:12px;padding:9px 0;border-bottom:1px solid var(--border)}
+.health-row:last-child{border:none}
+.hm-ico{width:36px;height:36px;border-radius:10px;background:var(--cyan-dim);border:1px solid rgba(34,211,238,.15);display:flex;align-items:center;justify-content:center;font-size:17px;flex-shrink:0}
+.hm-lbl{font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.05em}
+.hm-val{font-family:var(--font-hud);font-size:16px;font-weight:700;color:var(--text)}
+.htrack-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:8px;margin-bottom:12px}
+.htrack-tile{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:10px 6px;text-align:center;cursor:pointer;transition:all var(--transition);-webkit-tap-highlight-color:transparent}
+.htrack-tile:active{transform:scale(.94)}
+.htrack-icon{font-size:20px;display:block;margin-bottom:3px}
+.htrack-lbl{font-family:var(--font-hud);font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.htrack-val{font-family:var(--font-mono);font-size:12px;color:var(--cyan);margin-top:2px}
+/* ============ INFO CARDS (health tips) ============ */
+.info-card{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:12px;margin-bottom:10px}
+.info-card-hd{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.info-card-icon{font-size:22px}
+.info-card-title{font-family:var(--font-hud);font-size:13px;font-weight:700;color:var(--text)}
+.info-card-body{font-size:12px;color:var(--text2);line-height:1.7}
+.info-card-body strong{color:var(--cyan)}
+.info-alert{background:var(--amber-dim);border:1px solid rgba(251,191,36,.2);border-radius:8px;padding:7px 11px;font-size:11px;color:var(--amber);margin-top:8px}
+/* ============ POMODORO ============ */
+.pomo-circle{width:170px;height:170px;margin:0 auto;position:relative}
+.pomo-svg{width:100%;height:100%;transform:rotate(-90deg)}
+#pt{fill:none;stroke:var(--bg3);stroke-width:9}
+#pp{fill:none;stroke:var(--cyan);stroke-width:9;stroke-linecap:round;stroke-dasharray:502;stroke-dashoffset:0;filter:drop-shadow(0 0 6px var(--cyan))}
+.pomo-inner{position:absolute;inset:0;display:flex;flex-direction:column;align-items:center;justify-content:center}
+.pomo-time{font-family:var(--font-mono);font-size:36px;color:var(--cyan);text-shadow:var(--glow-c)}
+.pomo-lbl{font-family:var(--font-hud);font-size:11px;color:var(--text3);text-transform:uppercase;letter-spacing:.10em;margin-top:2px}
+/* ============ CALENDAR ============ */
+.cal-head{font-family:var(--font-hud);font-size:11px;color:var(--cyan);text-align:center;padding:4px 0;text-transform:uppercase;letter-spacing:.05em}
+.cal-day{aspect-ratio:1;display:flex;align-items:center;justify-content:center;border-radius:6px;font-family:var(--font-hud);font-size:13px;cursor:pointer;position:relative;transition:all var(--transition);color:var(--text2)}
+.cal-day.today{background:var(--cyan);color:#0F172A;font-weight:700;box-shadow:var(--glow-c)}
+.cal-day.ph::after{content:'';width:4px;height:4px;border-radius:50%;position:absolute;bottom:3px}
+.cal-day.ph-h::after{background:var(--green)}.cal-day.ph-m::after{background:var(--amber)}.cal-day.ph-l::after{background:var(--red)}
+.cal-day.empty{opacity:.15;pointer-events:none}
+/* ============ GOALS / CITA-CITA ============ */
+.goal-item{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:13px;margin-bottom:10px}
+.goal-hd{display:flex;align-items:center;gap:8px;margin-bottom:8px}
+.goal-icon{font-size:20px}
+.goal-name{font-family:var(--font-hud);font-size:14px;font-weight:700;color:var(--text);flex:1}
+.goal-pct{font-family:var(--font-mono);font-size:14px;color:var(--cyan)}
+.goal-cat{font-family:var(--font-mono);font-size:10px;color:var(--text3);background:var(--bg3);padding:2px 7px;border-radius:4px;border:1px solid var(--border)}
+/* ============ SAVINGS TARGET ============ */
+.saving-item{background:var(--panel);border:1px solid var(--border);border-left:3px solid var(--green);border-radius:12px;padding:13px;margin-bottom:10px}
+.saving-name{font-family:var(--font-hud);font-size:14px;font-weight:700;color:var(--text);margin-bottom:4px}
+.saving-amt{font-family:var(--font-mono);font-size:20px;color:var(--green);font-weight:700}
+.saving-sub{font-size:12px;color:var(--text2);margin-top:2px}
+/* ============ MISC ============ */
+.mentor-card{background:linear-gradient(135deg,rgba(167,139,250,.08),rgba(34,211,238,.04));border:1px solid rgba(167,139,250,.2);border-radius:14px;padding:13px;margin-bottom:10px;display:flex;gap:12px;align-items:flex-start}
+.mentor-avatar{width:40px;height:40px;border-radius:50%;background:linear-gradient(135deg,var(--purple2),var(--cyan2));border:2px solid var(--purple);display:flex;align-items:center;justify-content:center;font-size:19px;flex-shrink:0}
+.mentor-bubble{flex:1}
+.mentor-name{font-family:var(--font-hud);font-size:10px;color:var(--purple);text-transform:uppercase;letter-spacing:.08em;margin-bottom:4px}
+.mentor-msg{font-size:12px;color:var(--text2);line-height:1.5}
+.toast{position:fixed;bottom:calc(var(--nav-h)+14px);left:50%;transform:translateX(-50%) translateY(16px);background:var(--bg2);border:1px solid var(--border2);border-radius:10px;padding:9px 18px;font-family:var(--font-hud);font-size:12px;font-weight:600;color:var(--cyan);letter-spacing:.04em;opacity:0;transition:all .25s;pointer-events:none;z-index:400;white-space:nowrap;box-shadow:0 4px 18px rgba(0,0,0,.4);max-width:calc(100vw - 28px)}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+.notif-panel{position:fixed;top:var(--hdr-h);right:8px;background:var(--bg2);border:1px solid var(--border2);border-radius:14px;padding:14px;z-index:300;width:min(310px,calc(100vw - 24px));max-height:320px;overflow-y:auto;display:none;box-shadow:0 8px 30px rgba(0,0,0,.4)}
+.notif-panel.open{display:block}
+.notif-item{padding:7px 0;border-bottom:1px solid var(--border);font-size:12px;color:var(--text2);display:flex;gap:8px;align-items:flex-start}
+.notif-item:last-child{border:none}
+.notif-dot{width:6px;height:6px;border-radius:50%;background:var(--cyan);flex-shrink:0;margin-top:4px}
+.empty{text-align:center;padding:28px 20px;color:var(--text3)}
+.empty .empty-icon{font-size:36px;display:block;margin-bottom:8px;opacity:.25}
+.empty p{font-size:13px}
+.back-row{display:flex;align-items:center;gap:10px;margin-bottom:12px}
+.back-row h2{font-family:var(--font-hud);font-size:15px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.06em}
+.more-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:12px}
+.more-tile{background:var(--panel);border:1px solid var(--border);border-radius:12px;padding:16px 10px;text-align:center;cursor:pointer;transition:all var(--transition);border-top:2px solid transparent;-webkit-tap-highlight-color:transparent}
+.more-tile:active{transform:scale(.95)}
+.more-tile .mt-icon{font-size:24px;display:block;margin-bottom:5px}
+.more-tile .mt-label{font-family:var(--font-hud);font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text2)}
+.more-tile.mt-cyan{border-top-color:var(--cyan)}.more-tile.mt-green{border-top-color:var(--green)}
+.more-tile.mt-amber{border-top-color:var(--amber)}.more-tile.mt-purple{border-top-color:var(--purple)}
+.more-tile.mt-red{border-top-color:var(--red)}
+.qa-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:10px}
+.qa-btn{background:var(--bg3);border:1px solid var(--border);border-radius:10px;padding:11px 6px;text-align:center;cursor:pointer;transition:all var(--transition);-webkit-tap-highlight-color:transparent}
+.qa-btn:active{transform:scale(.93)}
+.qa-icon{font-size:20px;display:block;margin-bottom:3px}
+.qa-lbl{font-family:var(--font-hud);font-size:10px;color:var(--text2);text-transform:uppercase;letter-spacing:.04em}
+.recap-panel{background:var(--panel);border:1px solid var(--border);border-radius:var(--radius);margin-bottom:10px;overflow:hidden}
+.recap-row{display:flex;justify-content:space-between;align-items:center;padding:9px 14px;border-bottom:1px solid var(--border)}
+.recap-row:last-child{border-bottom:none}
+.recap-lbl{font-size:12px;color:var(--text2)}
+.recap-val{font-family:var(--font-hud);font-size:13px;font-weight:700;color:var(--cyan)}
+.xp-float{position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:var(--amber-dim);border:1px solid var(--amber);border-radius:8px;padding:7px 14px;font-family:var(--font-hud);font-weight:700;color:var(--amber);font-size:15px;z-index:500;animation:xpFloatUp 1.1s ease forwards;pointer-events:none}
+@keyframes xpFloatUp{0%{opacity:1;transform:translate(-50%,-50%)}100%{opacity:0;transform:translate(-50%,-130%)}}
+.confetti-piece{position:fixed;width:7px;height:7px;border-radius:2px;pointer-events:none;z-index:9999;animation:confettiFall 1.8s ease-in forwards}
+@keyframes confettiFall{0%{opacity:1;transform:translateY(-10px) rotate(0deg)}100%{opacity:0;transform:translateY(100vh) rotate(700deg)}}
+.ach-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.ach-tile{background:var(--panel);border:1px solid var(--border);border-radius:10px;padding:11px;text-align:center;transition:transform var(--transition)}
+.ach-tile.earned{border-color:rgba(251,191,36,.35);background:rgba(251,191,36,.05)}
+.ach-icon{font-size:26px;margin-bottom:4px}
+.ach-name{font-size:11px;font-weight:700;color:var(--text);letter-spacing:.03em}
+.ach-desc{font-size:10px;color:var(--text3);margin-top:2px;line-height:1.4}
+.ach-tile:not(.earned){opacity:.28;filter:grayscale(1)}
+.cat-tag{display:inline-flex;align-items:center;gap:4px;background:var(--bg3);border:1px solid var(--border);border-radius:20px;padding:4px 10px;font-family:var(--font-hud);font-size:10px;color:var(--text2);cursor:pointer;margin:2px;transition:all .18s;-webkit-tap-highlight-color:transparent}
+.cat-tag:active{transform:scale(.95)}
+.cat-tag.active{background:var(--cyan-dim);color:var(--cyan);border-color:rgba(34,211,238,.3)}
+.olahraga-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+/* ============ RESPONSIVE ============ */
+@media(min-width:440px){.stat-grid{grid-template-columns:repeat(4,1fr)}.ach-grid{grid-template-columns:repeat(3,1fr)}.more-grid{grid-template-columns:repeat(3,1fr)}.htrack-grid{grid-template-columns:repeat(5,1fr)}}
+@media(max-width:360px){.qa-grid{grid-template-columns:1fr 1fr}.stat-val{font-size:22px}.more-tile .mt-icon{font-size:21px}.nav-item{font-size:9px}}
+</style>
+</head>
+<body>
+<div id="app">
+
+<!-- ===== HEADER ===== -->
+<div id="hdr">
+  <div class="hud-logo">MY<span>DAILY</span>QUEST</div>
+  <div class="hdr-right">
+    <div class="hdr-btn" id="btn-mute" title="Suara">🔊</div>
+    <div class="hdr-btn" id="btn-dark" title="Mode">☀️</div>
+    <div class="hdr-btn" id="btn-notif" title="Notifikasi">🔔<div class="notif-badge" id="notif-badge">0</div></div>
+  </div>
+</div>
+<div class="notif-panel" id="notif-panel"><div class="sec">🔔 NOTIFIKASI</div><div id="notif-list"></div></div>
+
+<!-- ===== MAIN ===== -->
+<div id="main">
+
+<!-- ====== DASHBOARD ====== -->
+<div id="pg-dashboard" class="page active">
+  <div class="greet-card">
+    <div id="gr-text" class="greet-name">SELAMAT PAGI, <span style="color:var(--cyan)">PLAYER</span> 👋</div>
+    <div id="gr-time" class="greet-time"></div>
+    <div id="gr-quote" class="greet-quote"></div>
+  </div>
+  <div class="mentor-card">
+    <div class="mentor-avatar">🦉</div>
+    <div class="mentor-bubble">
+      <div class="mentor-name">⚔️ MENTOR ARYA</div>
+      <div class="mentor-msg" id="mentor-msg">Selamat datang! Selesaikan habit harianmu untuk mendapatkan XP.</div>
+    </div>
+  </div>
+  <div class="level-card">
+    <div class="level-row">
+      <div id="lv-badge" class="level-badge">⚔️ <span id="lv-name">NOVICE</span></div>
+      <div style="flex:1"></div>
+      <div class="streak-badge">🔥 <span id="str-cnt">0</span> hari</div>
+    </div>
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text3);margin-bottom:5px;font-family:var(--font-mono)">
+      <span>⭐ XP: <span id="xp-cur">0</span></span><span><span id="xp-nxt">200</span> NEXT</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="xp-bar" style="width:0%"></div></div>
+  </div>
+
+  <div class="stat-grid">
+    <div class="stat-tile t-cyan"><div class="stat-val" id="ds-habit">0%</div><div class="stat-lbl">Habit</div><div class="stat-icon">🎯</div></div>
+    <div class="stat-tile t-amber"><div class="stat-val" id="ds-ib">0%</div><div class="stat-lbl">Ibadah</div><div class="stat-icon">🕌</div></div>
+    <div class="stat-tile t-green"><div class="stat-val" id="ds-saldo">0</div><div class="stat-lbl">Saldo</div><div class="stat-icon">💰</div></div>
+    <div class="stat-tile t-purple"><div class="stat-val" id="ds-focus">0m</div><div class="stat-lbl">Fokus</div><div class="stat-icon">🍅</div></div>
+  </div>
+
+  <div class="panel p-none" style="padding:13px">
+    <div class="sec">⚡ Aksi Cepat</div>
+    <div class="qa-grid">
+      <div class="qa-btn" onclick="nav('habits')"><span class="qa-icon">✅</span><div class="qa-lbl">Habit</div></div>
+      <div class="qa-btn" onclick="nav('ibadah')"><span class="qa-icon">🕌</span><div class="qa-lbl">Ibadah</div></div>
+      <div class="qa-btn" onclick="nav('health')"><span class="qa-icon">❤️</span><div class="qa-lbl">Kesehatan</div></div>
+      <div class="qa-btn" onclick="nav('finance')"><span class="qa-icon">💰</span><div class="qa-lbl">Keuangan</div></div>
+      <div class="qa-btn" onclick="nav('goals')"><span class="qa-icon">🎯</span><div class="qa-lbl">Cita-Cita</div></div>
+      <div class="qa-btn" onclick="nav('pomodoro')"><span class="qa-icon">🍅</span><div class="qa-lbl">Fokus</div></div>
+    </div>
+  </div>
+
+  <div class="panel p-none" style="padding:13px">
+    <div class="sec">📈 Progress Harian</div>
+    <div class="prog-wrap"><div class="prog-row"><span>🎯 Habit</span><span id="pp-habit">0%</span></div><div class="prog-bar"><div class="prog-fill pf-cyan" id="pb-habit" style="width:0%"></div></div></div>
+    <div class="prog-wrap"><div class="prog-row"><span>🕌 Ibadah</span><span id="pp-ib">0%</span></div><div class="prog-bar"><div class="prog-fill pf-amber" id="pb-ib" style="width:0%"></div></div></div>
+    <div class="prog-wrap"><div class="prog-row"><span>❤️ Kesehatan</span><span id="pp-health">0%</span></div><div class="prog-bar"><div class="prog-fill pf-red" id="pb-health" style="width:0%"></div></div></div>
+  </div>
+
+  <div class="panel">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec" style="margin:0">🎯 Habit Hari Ini</div>
+      <button class="btn btn-cyan btn-sm" onclick="nav('habits')">SEMUA</button>
+    </div>
+    <div id="dash-habits"></div>
+  </div>
+
+  <!-- Target Tabungan Terdekat -->
+  <div class="panel p-green" id="dash-saving-panel">
+    <div class="sec s-green">💰 Target Tabungan</div>
+    <div id="dash-saving"></div>
+  </div>
+
+  <!-- Target Cita-Cita -->
+  <div class="panel p-purple" id="dash-goals-panel">
+    <div class="sec s-purple">🎯 Progress Cita-Cita</div>
+    <div id="dash-goals"></div>
+  </div>
+
+  <div class="panel p-none">
+    <div class="sec">📊 XP Mingguan</div>
+    <div style="height:150px;position:relative"><canvas id="dash-chart"></canvas></div>
+  </div>
+
+  <div class="panel p-amber">
+    <div class="sec s-amber">🏆 Pencapaian Terbaru</div>
+    <div id="dash-badges" class="ach-grid"></div>
+  </div>
+</div>
+
+<!-- ====== HABIT ====== -->
+<div id="pg-habits" class="page">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+    <span style="font-family:var(--font-hud);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em">🎯 Habit Tracker</span>
+    <button class="btn btn-cyan btn-sm" id="btn-add-habit">➕ ADD</button>
+  </div>
+  <div class="panel p-none" style="padding:12px 14px;margin-bottom:10px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--text2);margin-bottom:5px;font-family:var(--font-mono)">
+      <span>DAILY PROGRESS</span><span id="hbt-cnt">0/0</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="hbt-prog" style="width:0%"></div></div>
+  </div>
+  <div class="panel p-none" style="margin-bottom:12px"><div id="habit-list"></div></div>
+  <div class="panel p-none">
+    <div class="sec">📊 7 Hari Terakhir</div>
+    <div style="height:140px;position:relative"><canvas id="habit-chart"></canvas></div>
+  </div>
+  <div class="panel p-none">
+    <div class="sec">🗓️ Rekap Habit</div>
+    <div class="tabs" id="habit-recap-tabs">
+      <button class="tab active" data-hrt="harian">Harian</button>
+      <button class="tab" data-hrt="mingguan">Mingguan</button>
+      <button class="tab" data-hrt="bulanan">Bulanan</button>
+    </div>
+    <div id="habit-recap-content"></div>
+  </div>
+</div>
+
+<!-- ====== IBADAH ====== -->
+<div id="pg-ibadah" class="page">
+  <div style="font-family:var(--font-hud);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">🕌 Ibadah Harian</div>
+  <div class="panel p-amber" style="margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--amber);font-family:var(--font-mono);margin-bottom:5px">
+      <span>PROGRESS IBADAH</span><span id="ib-pct">0%</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="ib-bar" style="width:0%;background:linear-gradient(90deg,#B45309,var(--amber))"></div></div>
+    <div id="ib-stats" style="margin-top:8px"></div>
+  </div>
+  <div class="panel p-none" style="margin-bottom:12px"><div id="ib-list"></div></div>
+  <div class="panel p-none">
+    <div class="sec">📊 7 Hari Terakhir</div>
+    <div style="height:140px;position:relative"><canvas id="ib-chart"></canvas></div>
+  </div>
+</div>
+
+<!-- ====== KESEHATAN ====== -->
+<div id="pg-health" class="page">
+  <div style="font-family:var(--font-hud);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">❤️ Kesehatan</div>
+  <div class="tabs" id="health-tabs">
+    <button class="tab active" data-ht="tracker">📊 Tracker</button>
+    <button class="tab" data-ht="olahraga">🏃 Olahraga</button>
+    <button class="tab" data-ht="vitamin">💊 Vitamin</button>
+    <button class="tab" data-ht="penyakit">🤒 Penyakit</button>
+    <button class="tab" data-ht="tips">💡 Tips</button>
+  </div>
+  <div id="ht-tracker">
+    <div class="htrack-grid" id="htrack-grid"></div>
+    <div class="panel p-none">
+      <div class="sec">📋 Input Hari Ini</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px">
+        <div class="f-row"><div class="f-lbl">⚖️ Berat (kg)</div><input type="number" id="h-w" placeholder="65"/></div>
+        <div class="f-row"><div class="f-lbl">📏 Tinggi (cm)</div><input type="number" id="h-h" placeholder="170"/></div>
+        <div class="f-row"><div class="f-lbl">🌙 Tidur (jam)</div><input type="number" id="h-s" placeholder="7"/></div>
+        <div class="f-row"><div class="f-lbl">💧 Air (gelas)</div><input type="number" id="h-aw" placeholder="8"/></div>
+      </div>
+      <div class="f-row"><div class="f-lbl">🏃 Olahraga (mnt)</div><input type="number" id="h-ex" placeholder="30"/></div>
+      <button class="btn btn-cyan btn-full" id="btn-save-h">💾 SIMPAN</button>
+    </div>
+    <div class="panel"><div class="sec">📈 Trend Berat</div><div style="height:140px;position:relative"><canvas id="health-chart"></canvas></div></div>
+    <div class="panel"><div class="sec">📊 Data Terkini</div><div id="health-sum"></div></div>
+  </div>
+  <div id="ht-olahraga" style="display:none">
+    <div class="panel p-green">
+      <div class="sec s-green">🏃 Log Olahraga Hari Ini</div>
+      <div class="olahraga-grid" id="olahraga-grid"></div>
+    </div>
+    <div class="panel p-none"><div class="sec">📊 7 Hari Terakhir</div><div style="height:140px;position:relative"><canvas id="ola-chart"></canvas></div></div>
+  </div>
+  <div id="ht-vitamin" style="display:none"><div id="vitamin-list"></div></div>
+  <div id="ht-penyakit" style="display:none"><div id="penyakit-list"></div></div>
+  <div id="ht-tips" style="display:none"><div id="tips-list"></div></div>
+</div>
+
+<!-- ====== MORE ====== -->
+<div id="pg-more" class="page">
+  <div style="font-family:var(--font-hud);font-size:15px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;margin-bottom:12px">⚙️ System Menu</div>
+  <div class="more-grid">
+    <div class="more-tile mt-green" onclick="nav('finance')"><span class="mt-icon">💰</span><div class="mt-label">Keuangan</div></div>
+    <div class="more-tile mt-purple" onclick="nav('goals')"><span class="mt-icon">🎯</span><div class="mt-label">Cita-Cita</div></div>
+    <div class="more-tile mt-cyan" onclick="nav('pomodoro')"><span class="mt-icon">🍅</span><div class="mt-label">Pomodoro</div></div>
+    <div class="more-tile mt-amber" onclick="nav('calendar')"><span class="mt-icon">📅</span><div class="mt-label">Kalender</div></div>
+    <div class="more-tile mt-amber" onclick="nav('achievements')"><span class="mt-icon">🏆</span><div class="mt-label">Achievement</div></div>
+    <div class="more-tile mt-cyan" onclick="nav('settings')" style="grid-column:span 2"><span class="mt-icon">⚙️</span><div class="mt-label">Pengaturan</div></div>
+  </div>
+</div>
+
+<!-- ====== KEUANGAN ====== -->
+<div id="pg-finance" class="page" style="display:none">
+  <div class="back-row"><button class="hdr-btn" onclick="nav('more')">⬅️</button><h2>💰 Keuangan</h2></div>
+  <div class="fin-card">
+    <div class="fin-bal-lbl">SALDO TERSEDIA</div>
+    <div class="fin-bal-val" id="fin-bal">Rp 0</div>
+    <div style="display:flex;gap:20px;margin-top:8px;font-size:12px;font-family:var(--font-mono)">
+      <div><span style="color:var(--green)">↑ MASUK</span><br><strong id="fin-in" style="color:var(--green)">Rp 0</strong></div>
+      <div><span style="color:var(--red)">↓ KELUAR</span><br><strong id="fin-out" style="color:var(--red)">Rp 0</strong></div>
+    </div>
+  </div>
+  <div style="display:flex;gap:8px;margin-bottom:12px">
+    <button class="btn btn-green" style="flex:1" id="btn-fin-in">➕ PEMASUKAN</button>
+    <button class="btn btn-red" style="flex:1" id="btn-fin-out">➖ PENGELUARAN</button>
+  </div>
+
+  <!-- Rekap tabs -->
+  <div class="panel p-none" style="padding:12px 14px">
+    <div class="sec">🗓️ Rekap Keuangan</div>
+    <div class="tabs" id="fin-recap-tabs">
+      <button class="tab active" data-frt="harian">Harian</button>
+      <button class="tab" data-frt="mingguan">Mingguan</button>
+      <button class="tab" data-frt="bulanan">Bulanan</button>
+      <button class="tab" data-frt="tahunan">Tahunan</button>
+    </div>
+    <div id="fin-recap-content"></div>
+  </div>
+
+  <!-- Charts -->
+  <div class="panel p-none"><div class="sec">📊 Pengeluaran 7 Hari</div><div style="height:160px;position:relative"><canvas id="fin-chart"></canvas></div></div>
+  <div class="panel p-none"><div class="sec">🏷️ Per Kategori</div><div style="height:150px;position:relative"><canvas id="fin-cat-chart"></canvas></div></div>
+
+  <!-- Download Excel -->
+  <button class="btn btn-green btn-full" id="btn-fin-export" style="margin-bottom:12px">📥 DOWNLOAD EXCEL</button>
+
+  <!-- Kelola Kategori -->
+  <div class="panel p-none" style="padding:12px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec" style="margin:0">🏷️ Kelola Kategori</div>
+      <button class="btn btn-cyan btn-sm" id="btn-add-fincat">➕ KATEGORI</button>
+    </div>
+    <div id="fincat-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+
+  <!-- Target Tabungan -->
+  <div class="panel p-green">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec s-green" style="margin:0">💰 Target Tabungan</div>
+      <button class="btn btn-green btn-sm" id="btn-add-saving">➕ TARGET</button>
+    </div>
+    <div id="saving-list"></div>
+  </div>
+
+  <!-- Riwayat Transaksi -->
+  <div class="panel p-none">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:10px">
+      <div class="sec" style="margin:0">📋 Riwayat Transaksi</div>
+      <span style="font-family:var(--font-mono);font-size:10px;color:var(--text3)" id="fin-count">0 transaksi</span>
+    </div>
+    <div id="fin-list"></div>
+  </div>
+</div>
+
+<!-- ====== CITA-CITA / GOALS ====== -->
+<div id="pg-goals" class="page" style="display:none">
+  <div class="back-row">
+    <button class="hdr-btn" onclick="nav('more')">⬅️</button>
+    <h2>🎯 Target &amp; Cita-Cita</h2>
+    <button class="btn btn-cyan btn-sm" id="btn-add-goal" style="margin-left:auto">➕ ADD</button>
+  </div>
+  <div class="panel p-none" style="padding:12px 14px;margin-bottom:12px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
+      <div class="sec" style="margin:0">🏷️ Kelola Kategori</div>
+      <button class="btn btn-purple btn-sm" id="btn-add-goalcat">➕ KATEGORI</button>
+    </div>
+    <div id="goalcat-list" style="display:flex;flex-wrap:wrap;gap:6px"></div>
+  </div>
+  <div id="goals-filter" style="margin-bottom:12px;display:flex;flex-wrap:wrap;gap:6px">
+    <div class="cat-tag active" data-gf="all">Semua</div>
+  </div>
+  <div id="goals-list"></div>
+</div>
+
+<!-- ====== POMODORO ====== -->
+<div id="pg-pomodoro" class="page" style="display:none">
+  <div class="back-row"><button class="hdr-btn" onclick="nav('more')">⬅️</button><h2>🍅 Pomodoro</h2></div>
+  <div class="panel p-none" style="text-align:center;padding:20px 14px">
+    <div class="pomo-circle">
+      <svg class="pomo-svg" viewBox="0 0 170 170"><circle id="pt" cx="85" cy="85" r="80"/><circle id="pp" cx="85" cy="85" r="80"/></svg>
+      <div class="pomo-inner"><div class="pomo-time" id="pomo-time">25:00</div><div class="pomo-lbl" id="pomo-lbl">🎯 Siap</div></div>
+    </div>
+    <div style="display:flex;gap:8px;justify-content:center;margin-top:16px">
+      <button class="btn btn-cyan" id="btn-pomo-play">▶️ MULAI</button>
+      <button class="btn btn-ghost" id="btn-pomo-reset">⏹️ RESET</button>
+    </div>
+    <div style="display:flex;gap:6px;justify-content:center;margin-top:12px">
+      <button class="tab active" data-pmn="25">25m</button>
+      <button class="tab" data-pmn="45">45m</button>
+      <button class="tab" data-pmn="60">60m</button>
+    </div>
+  </div>
+  <div class="stat-grid" style="margin-top:0">
+    <div class="stat-tile t-cyan"><div class="stat-val" id="pomo-sessions">0</div><div class="stat-lbl">Sesi</div></div>
+    <div class="stat-tile t-green"><div class="stat-val" id="pomo-total">0j 0m</div><div class="stat-lbl">Total Fokus</div></div>
+  </div>
+  <div class="panel p-none"><div class="sec">📊 7 Hari Terakhir</div><div style="height:140px;position:relative"><canvas id="pomo-chart"></canvas></div></div>
+</div>
+
+<!-- ====== KALENDER ====== -->
+<div id="pg-calendar" class="page" style="display:none">
+  <div class="back-row"><button class="hdr-btn" onclick="nav('more')">⬅️</button><h2>📅 Kalender</h2></div>
+  <div class="panel p-none" style="padding:12px 14px">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
+      <button class="btn btn-ghost btn-sm" id="cal-prev">◀</button>
+      <span id="cal-lbl" style="font-family:var(--font-hud);font-size:14px;font-weight:700;color:var(--cyan);letter-spacing:.05em"></span>
+      <button class="btn btn-ghost btn-sm" id="cal-next">▶</button>
+    </div>
+    <div id="cal-grid" style="display:grid;grid-template-columns:repeat(7,1fr);gap:3px"></div>
+    <div style="display:flex;gap:12px;margin-top:12px;font-size:11px;color:var(--text3);font-family:var(--font-mono)">
+      <span>🟢 ≥80%</span><span>🟡 ≥40%</span><span>🔴 &lt;40%</span>
+    </div>
+  </div>
+</div>
+
+<!-- ====== ACHIEVEMENTS ====== -->
+<div id="pg-achievements" class="page" style="display:none">
+  <div class="back-row"><button class="hdr-btn" onclick="nav('more')">⬅️</button><h2>🏆 Achievement</h2></div>
+  <div class="panel p-none" style="padding:12px 14px;margin-bottom:12px">
+    <div style="display:flex;justify-content:space-between;font-size:11px;color:var(--amber);font-family:var(--font-mono);margin-bottom:5px">
+      <span>ACHIEVEMENT PROGRESS</span><span id="ach-pct">0%</span>
+    </div>
+    <div class="xp-track"><div class="xp-fill" id="ach-prog" style="width:0%;background:linear-gradient(90deg,#B45309,var(--amber))"></div></div>
+  </div>
+  <div class="tabs" id="ach-tabs">
+    <button class="tab active" data-at="all">Semua</button>
+    <button class="tab" data-at="daily">Harian</button>
+    <button class="tab" data-at="weekly">Mingguan</button>
+    <button class="tab" data-at="monthly">Bulanan</button>
+  </div>
+  <div class="ach-grid" id="ach-list"></div>
+</div>
+
+<!-- ====== SETTINGS ====== -->
+<div id="pg-settings" class="page" style="display:none">
+  <div class="back-row"><button class="hdr-btn" onclick="nav('more')">⬅️</button><h2>⚙️ Pengaturan</h2></div>
+  <div class="panel">
+    <div class="sec">👤 Profil</div>
+    <div class="f-row"><div class="f-lbl">Username</div><input type="text" id="set-name" placeholder="Nama kamu"/></div>
+    <div class="f-row"><div class="f-lbl">Universitas</div><input type="text" id="set-univ" placeholder="Nama universitas"/></div>
+    <div class="f-row"><div class="f-lbl">Program Studi</div><input type="text" id="set-prodi" placeholder="Prodi"/></div>
+    <button class="btn btn-cyan btn-full" id="btn-save-profile">💾 SIMPAN</button>
+  </div>
+  <div class="panel">
+    <div class="sec">💾 Data</div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <button class="btn btn-ghost" id="btn-export">📤 EXPORT JSON</button>
+      <button class="btn btn-ghost" id="btn-import-btn">📥 IMPORT JSON</button>
+      <input type="file" id="btn-import" accept=".json" style="display:none"/>
+      <button class="btn btn-red" id="btn-reset">🗑️ RESET SEMUA DATA</button>
+    </div>
+  </div>
+  <div class="panel p-none">
+    <div class="sec">ℹ️ Tentang</div>
+    <div style="font-family:var(--font-mono);font-size:12px;color:var(--text3);line-height:1.8">MYDAILYQUEST v6.0<br>Habit + Ibadah + Kesehatan + Keuangan + Cita-Cita<br>Semua data tersimpan lokal (offline). 🇮🇩</div>
+  </div>
+</div>
+
+</div><!-- /main -->
+
+<!-- ===== BOTTOM NAV ===== -->
+<nav id="nav">
+  <button class="nav-item active" data-nav="dashboard"><span class="nav-icon">🏠</span>Home</button>
+  <button class="nav-item" data-nav="habits"><span class="nav-icon">✅</span>Habit</button>
+  <button class="nav-item" data-nav="ibadah"><span class="nav-icon">🕌</span>Ibadah</button>
+  <button class="nav-item" data-nav="health"><span class="nav-icon">❤️</span>Sehat</button>
+  <button class="nav-item" data-nav="more"><span class="nav-icon">⚙️</span>More</button>
+</nav>
+</div><!-- /app -->
+
+<!-- ===== TOAST ===== -->
+<div class="toast" id="toast"></div>
+
+<!-- ===== MODALS ===== -->
+<!-- Modal: Habit -->
+<div class="overlay" id="ov-habit">
+  <div class="modal">
+    <div class="modal-hd" id="mhbt-title">✅ ADD HABIT</div>
+    <div class="f-row"><div class="f-lbl">Nama Aktivitas</div><input type="text" id="mh-name" placeholder="Cth: Olahraga Pagi"/></div>
+    <div class="f-row"><div class="f-lbl">⭐ XP Reward</div><input type="number" id="mh-xp" value="10" min="1" max="100"/></div>
+    <input type="hidden" id="mh-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-habit" style="flex:2">💾 SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Finance Tambah -->
+<div class="overlay" id="ov-fin">
+  <div class="modal">
+    <div class="modal-hd" id="mfin-title">💚 Tambah Pemasukan</div>
+    <div class="f-row"><div class="f-lbl">📅 Tanggal</div><input type="date" id="mf-date"/></div>
+    <div class="f-row"><div class="f-lbl">💵 Nominal (Rp)</div><input type="number" id="mf-amt" placeholder="50000"/></div>
+    <div class="f-row"><div class="f-lbl">🏷️ Kategori</div><select id="mf-cat"></select></div>
+    <div class="f-row"><div class="f-lbl">📝 Catatan</div><input type="text" id="mf-desc" placeholder="Opsional..."/></div>
+    <input type="hidden" id="mf-type"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-fin" style="flex:2">💾 SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Finance Edit -->
+<div class="overlay" id="ov-fin-edit">
+  <div class="modal">
+    <div class="modal-hd">✏️ Edit Transaksi</div>
+    <div class="f-row"><div class="f-lbl">📅 Tanggal</div><input type="date" id="mfe-date"/></div>
+    <div class="f-row"><div class="f-lbl">💵 Nominal (Rp)</div><input type="number" id="mfe-amt"/></div>
+    <div class="f-row"><div class="f-lbl">🏷️ Kategori</div><select id="mfe-cat"></select></div>
+    <div class="f-row"><div class="f-lbl">📝 Catatan</div><input type="text" id="mfe-desc"/></div>
+    <input type="hidden" id="mfe-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-fin-edit" style="flex:2">💾 UPDATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Kategori Keuangan -->
+<div class="overlay" id="ov-fincat">
+  <div class="modal">
+    <div class="modal-hd">🏷️ Kategori Keuangan</div>
+    <div class="f-row"><div class="f-lbl">Nama Kategori</div><input type="text" id="mfc-name" placeholder="Cth: Makan, Transportasi"/></div>
+    <input type="hidden" id="mfc-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-fincat" style="flex:2">💾 SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Target Tabungan -->
+<div class="overlay" id="ov-saving">
+  <div class="modal">
+    <div class="modal-hd" id="msav-title">💰 Target Tabungan</div>
+    <div class="f-row"><div class="f-lbl">Nama Target</div><input type="text" id="ms-name" placeholder="Cth: Laptop Baru"/></div>
+    <div class="f-row"><div class="f-lbl">🎯 Nominal Target (Rp)</div><input type="number" id="ms-target" placeholder="5000000"/></div>
+    <div class="f-row"><div class="f-lbl">💵 Terkumpul (Rp)</div><input type="number" id="ms-collected" placeholder="0" value="0"/></div>
+    <div class="f-row"><div class="f-lbl">📅 Deadline</div><input type="date" id="ms-deadline"/></div>
+    <input type="hidden" id="ms-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-saving" style="flex:2">💾 SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Goal -->
+<div class="overlay" id="ov-goal">
+  <div class="modal">
+    <div class="modal-hd" id="mgoal-title">🎯 Tambah Target</div>
+    <div class="f-row"><div class="f-lbl">Nama Target</div><input type="text" id="mg-name" placeholder="Cth: Hafal 10 Surah"/></div>
+    <div class="f-row"><div class="f-lbl">🏷️ Kategori</div><select id="mg-cat"><option value="">-- Pilih Kategori --</option></select></div>
+    <div class="f-row"><div class="f-lbl">🎯 Target (angka)</div><input type="number" id="mg-target" placeholder="100"/></div>
+    <div class="f-row"><div class="f-lbl">📈 Terkini</div><input type="number" id="mg-current" placeholder="0" value="0"/></div>
+    <div class="f-row"><div class="f-lbl">📏 Satuan</div><input type="text" id="mg-unit" placeholder="Cth: %, buku, km"/></div>
+    <div class="f-row"><div class="f-lbl">📅 Deadline</div><input type="date" id="mg-deadline"/></div>
+    <input type="hidden" id="mg-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-goal" style="flex:2">💾 SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Goal Kategori -->
+<div class="overlay" id="ov-goalcat">
+  <div class="modal">
+    <div class="modal-hd">🏷️ Kategori Cita-Cita</div>
+    <div class="f-row"><div class="f-lbl">Nama Kategori</div><input type="text" id="mgc-name" placeholder="Cth: Spiritual, Karir"/></div>
+    <div class="f-row"><div class="f-lbl">Ikon (emoji)</div><input type="text" id="mgc-icon" placeholder="🎯" maxlength="4"/></div>
+    <input type="hidden" id="mgc-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-goalcat" style="flex:2">💾 SAVE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Update Progress Goal -->
+<div class="overlay" id="ov-goal-progress">
+  <div class="modal">
+    <div class="modal-hd">📈 Update Progress</div>
+    <div id="mgp-info" style="font-size:13px;color:var(--text2);margin-bottom:14px"></div>
+    <div class="f-row"><div class="f-lbl">Progress Terkini</div><input type="number" id="mgp-current" placeholder="0"/></div>
+    <input type="hidden" id="mgp-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-cyan" id="btn-save-goal-progress" style="flex:2">💾 UPDATE</button>
+    </div>
+  </div>
+</div>
+
+<!-- Modal: Update Saving -->
+<div class="overlay" id="ov-saving-update">
+  <div class="modal">
+    <div class="modal-hd">💰 Update Tabungan</div>
+    <div id="msu-info" style="font-size:13px;color:var(--text2);margin-bottom:14px"></div>
+    <div class="f-row"><div class="f-lbl">Jumlah Terkumpul (Rp)</div><input type="number" id="msu-collected"/></div>
+    <input type="hidden" id="msu-id"/>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-ghost" onclick="closeOv()" style="flex:1">✖ BATAL</button>
+      <button class="btn btn-green" id="btn-save-saving-update" style="flex:2">💾 UPDATE</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ============================================================
+// CONSTANTS
+// ============================================================
+const IBADAH_FULL=[
+  {id:'subuh',name:'🌅 Shalat Subuh',xp:10},
+  {id:'dzuhur',name:'☀️ Shalat Dzuhur',xp:10},
+  {id:'ashar',name:'🌤️ Shalat Ashar',xp:10},
+  {id:'maghrib',name:'🌆 Shalat Maghrib',xp:10},
+  {id:'isya',name:'🌙 Shalat Isya',xp:10},
+  {id:'tilawah',name:'📖 Tilawah Al-Qur\'an',xp:10},
+  {id:'dzikir',name:'🤲 Dzikir',xp:10},
+  {id:'dhuha',name:'🌞 Shalat Dhuha',xp:10},
+  {id:'tahajud',name:'🌃 Shalat Tahajud',xp:10},
+];
+const LEVELS=[
+  {name:'NOVICE',min:0,max:200,cls:'',icon:'🥉'},
+  {name:'EXPLORER',min:200,max:600,cls:'lv-purple',icon:'🥈'},
+  {name:'ADVENTURER',min:600,max:1200,cls:'lv-green',icon:'🥇'},
+  {name:'ELITE',min:1200,max:2500,cls:'lv-amber',icon:'💎'},
+  {name:'MASTER',min:2500,max:5000,cls:'lv-amber',icon:'👑'},
+  {name:'LEGEND',min:5000,max:99999,cls:'lv-amber',icon:'⚔️'},
+];
+const OLAHRAGA_LIST=[
+  {icon:'🚶',name:'Jalan Kaki',xp:10,kal:150},{icon:'🏃',name:'Lari',xp:20,kal:300},
+  {icon:'🚴',name:'Bersepeda',xp:15,kal:220},{icon:'🏊',name:'Renang',xp:25,kal:350},
+  {icon:'🧘',name:'Yoga',xp:12,kal:120},{icon:'💪',name:'Push Up',xp:10,kal:100},
+  {icon:'🏋️',name:'Gym',xp:20,kal:280},{icon:'⛹️',name:'Basket',xp:15,kal:240},
+  {icon:'⚽',name:'Futsal',xp:18,kal:270},{icon:'🏸',name:'Badminton',xp:15,kal:230},
+];
+const VITAMINS=[
+  {icon:'🍊',name:'Vitamin C',fungsi:'Antioksidan & imunitas',manfaat:'Cegah flu, percepat penyembuhan',sumber:'Jeruk, kiwi, peprika',dosis:'75-90 mg/hari'},
+  {icon:'☀️',name:'Vitamin D',fungsi:'Penyerapan kalsium & imunitas',manfaat:'Tulang kuat, mood baik',sumber:'Sinar matahari pagi, ikan salmon',dosis:'600-2000 IU/hari'},
+  {icon:'🧠',name:'Omega-3',fungsi:'Kesehatan otak & jantung',manfaat:'Konsentrasi belajar',sumber:'Ikan laut, kacang walnut',dosis:'250-500 mg/hari'},
+  {icon:'🦴',name:'Kalsium',fungsi:'Pembentukan tulang & gigi',manfaat:'Tulang kuat, cegah osteoporosis',sumber:'Susu, tahu, tempe, bayam',dosis:'1000 mg/hari'},
+  {icon:'🩸',name:'Zat Besi',fungsi:'Pembentukan sel darah merah',manfaat:'Cegah anemia, tingkatkan energi',sumber:'Daging merah, bayam, kacang',dosis:'8-18 mg/hari'},
+  {icon:'⚡',name:'Vitamin B Kompleks',fungsi:'Metabolisme energi',manfaat:'Energi optimal, fungsi saraf',sumber:'Biji-bijian, daging, telur',dosis:'Sesuai label'},
+  {icon:'🔬',name:'Magnesium',fungsi:'Fungsi otot & saraf',manfaat:'Tidur lebih baik, kurangi stres',sumber:'Kacang almond, biji labu',dosis:'310-420 mg/hari'},
+];
+const PENYAKIT=[
+  {icon:'🤧',name:'Flu/Pilek',gejala:'Hidung tersumbat, bersin, sakit tenggorokan, demam ringan.',penanganan:'Istirahat, banyak minum air, vitamin C. Uap air panas untuk melegakan hidung.',kapan:'Demam >39°C, gejala >7 hari, atau sesak napas.'},
+  {icon:'🤒',name:'Demam Ringan',gejala:'Suhu 37.5-38.5°C, menggigil, badan lemas.',penanganan:'Kompres hangat. Banyak minum air. Paracetamol jika perlu.',kapan:'Suhu >39°C, demam >3 hari, atau disertai ruam.'},
+  {icon:'🤕',name:'Sakit Kepala',gejala:'Nyeri di kepala, sensitif cahaya/suara.',penanganan:'Istirahat di ruang gelap. Minum air cukup. Hindari layar sementara.',kapan:'Sakit tiba-tiba parah, disertai kaku leher, atau tidak membaik 2 hari.'},
+  {icon:'🫃',name:'Masuk Angin',gejala:'Perut kembung, mual, badan meriang, diare ringan.',penanganan:'Minum jahe hangat. Hindari makanan berminyak. Kompres hangat.',kapan:'Muntah terus-menerus, diare >2 hari, atau demam tinggi.'},
+];
+const HEALTH_TIPS=[
+  {icon:'💧',title:'Hidrasi Optimal',tip:'Minum air putih minimal 8 gelas per hari. Dehidrasi ringan mengurangi konsentrasi 10-15%. Mulai pagi dengan segelas air.'},
+  {icon:'😴',title:'Kualitas Tidur',tip:'Tidur 7-9 jam per malam. Tidur cukup meningkatkan memori dan daya tahan tubuh. Hindari layar 1 jam sebelum tidur.'},
+  {icon:'🏃',title:'Gerak Aktif',tip:'30 menit olahraga ringan per hari mengurangi stres, meningkatkan mood, dan mempertajam fokus. Tidak harus gym — jalan kaki cukup!'},
+  {icon:'🍎',title:'Nutrisi Seimbang',tip:'Perbanyak sayur dan buah. Batasi makanan digoreng dan tinggi gula. Sarapan penting untuk energi dan konsentrasi sepanjang hari.'},
+  {icon:'🧘',title:'Kelola Stres',tip:'Praktikkan pernapasan dalam: tarik napas 4 detik, tahan 4 detik, keluarkan 4 detik. Lakukan 5 menit saat stres.'},
+];
+const QUOTES=[
+  {text:'Disiplin adalah jembatan antara tujuan dan pencapaian.',author:'Jim Rohn'},
+  {text:'Konsistensi kecil yang dilakukan setiap hari menciptakan perubahan besar.',author:'Unknown'},
+  {text:'Belajar hari ini untuk masa depan yang lebih cerah.',author:'Unknown'},
+  {text:'Satu langkah kecil setiap hari lebih baik dari tidak sama sekali.',author:'Unknown'},
+  {text:'Ilmu tanpa amal ibarat pohon tanpa buah.',author:'Pepatah Arab'},
+  {text:'Orang-orang yang berhasil adalah mereka yang terus bergerak meski takut.',author:'Unknown'},
+  {text:'Jangan tunggu sempurna. Mulai dulu, sempurnakan di perjalanan.',author:'Unknown'},
+  {text:'Setiap habit yang kamu bangun adalah investasi untuk dirimu.',author:'Unknown'},
+  {text:'Pikiran positif menghasilkan tindakan positif dan hasil positif.',author:'Unknown'},
+  {text:'Allah tidak akan membebanimu melebihi kemampuanmu.',author:'QS. Al-Baqarah: 286'},
+  {text:'Dalam setiap kesulitan ada kemudahan. Dua kali.',author:'QS. Al-Insyirah: 5-6'},
+  {text:'Manusia terbaik adalah yang paling bermanfaat bagi orang lain.',author:'HR. Ahmad'},
+  {text:'Kamu sedang menulis kisah hidupmu satu hari pada satu waktu.',author:'Unknown'},
+  {text:'Jadikan setiap detik bermakna. Waktu tidak bisa dikembalikan.',author:'Unknown'},
+  {text:'Bermimpilah besar, mulailah kecil, bertindaklah sekarang.',author:'Unknown'},
+];
+const MENTOR_MSGS=[
+  'Kamu sudah luar biasa! Teruskan perjalananmu.',
+  'Satu kebiasaan kecil hari ini = investasi besar masa depan.',
+  'Jangan lupa istirahat — tubuh sehat = otak produktif.',
+  'Progress kecil setiap hari lebih baik dari berhenti.',
+  'Kamu lebih kuat dari rasa malasmu. Buktikan!',
+  'Selesaikan ibadah harianmu — berkah menantimu!',
+  '5 sholat wajib = fondasi produktivitas terkuat.',
+  'Catat keuanganmu — bijak finansial = tenang belajar.',
+  'Hidup bukan tentang seberapa cepat, tapi seberapa konsisten.',
+  'Setetes air setiap hari akan membentuk lautan prestasi.',
+];
+const ACH_DEF=[
+  {id:'d_habit1',cat:'daily',icon:'✅',name:'Habit Perdana',desc:'Selesaikan 1 habit',xp:20,check:()=>Object.values(hdone).filter(Boolean).length>=1},
+  {id:'d_habit5',cat:'daily',icon:'🎯',name:'Habit Rajin',desc:'Selesaikan 5 habit hari ini',xp:40,check:()=>Object.values(hdone).filter(Boolean).length>=5},
+  {id:'d_ibadah',cat:'daily',icon:'🕌',name:'Ibadah Lengkap',desc:'Selesaikan semua sholat 5 waktu',xp:50,check:()=>['subuh','dzuhur','ashar','maghrib','isya'].every(i=>ibdone[i])},
+  {id:'d_pomo2',cat:'daily',icon:'🍅',name:'Fokus Mode ON',desc:'Selesaikan 2 sesi Pomodoro',xp:30,check:()=>(pomoDone.sessions||0)>=2},
+  {id:'w_streak7',cat:'weekly',icon:'🔥',name:'7 Hari Streak',desc:'Pertahankan streak 7 hari',xp:100,check:()=>streak>=7},
+  {id:'w_pomo10',cat:'weekly',icon:'⏱️',name:'Fokus Addict',desc:'10 sesi Pomodoro',xp:70,check:()=>(pomoDone.sessions||0)>=10},
+  {id:'w_habit_all',cat:'weekly',icon:'💪',name:'All Green',desc:'Selesaikan semua habit 1 hari',xp:60,check:()=>habits.length>0&&Object.values(hdone).filter(Boolean).length>=habits.length},
+  {id:'m_streak30',cat:'monthly',icon:'👑',name:'30 Hari Streak',desc:'Streak 30 hari',xp:300,check:()=>streak>=30},
+  {id:'m_xp500',cat:'monthly',icon:'⭐',name:'500 XP',desc:'Kumpulkan 500 XP',xp:50,check:()=>xp>=500},
+  {id:'m_xp1000',cat:'monthly',icon:'💎',name:'1000 XP',desc:'Kumpulkan 1000 XP',xp:100,check:()=>xp>=1000},
+  {id:'m_fin10',cat:'monthly',icon:'📊',name:'Pencatat Finansial',desc:'Catat 10 transaksi',xp:50,check:()=>fins.length>=10},
+  {id:'m_goal1',cat:'monthly',icon:'🎯',name:'Punya Tujuan',desc:'Buat 1 target cita-cita',xp:30,check:()=>goals.length>=1},
+  {id:'l_streak100',cat:'legendary',icon:'🌟',name:'Century Streak',desc:'100 hari streak',xp:500,check:()=>streak>=100},
+  {id:'l_xp5000',cat:'legendary',icon:'⚔️',name:'LEGEND',desc:'Capai 5000 XP',xp:500,check:()=>xp>=5000},
+  {id:'l_goal_all',cat:'legendary',icon:'🏆',name:'Mimpi Tercapai',desc:'Selesaikan 5 target cita-cita',xp:300,check:()=>goals.filter(g=>g.current>=g.target).length>=5},
+];
+const DAY_LABELS=['Min','Sen','Sel','Rab','Kam','Jum','Sab'];
+const CAT_COLORS=['#22D3EE','#34D399','#FBBF24','#F87171','#A78BFA','#FB923C','#38BDF8','#4ADE80'];
+
+// ============================================================
+// STORAGE
+// ============================================================
+const K={
+  habits:'mdq_h',hdone:'mdq_hd',
+  fin:'mdq_f',finCats:'mdq_fcats',savings:'mdq_sav',
+  goals:'mdq_goals',goalCats:'mdq_gcats',
+  health:'mdq_he',ibdone:'mdq_id',
+  profile:'mdq_p',xp:'mdq_xp',
+  streak:'mdq_str',lastDate:'mdq_ld',dark:'mdq_dk',
+  pomo:'mdq_po',notifs:'mdq_notifs',earned:'mdq_ea',
+  olahraga:'mdq_ola',weekXP:'mdq_wxp',weekPomo:'mdq_wpo',
+  habitLog:'mdq_habit_log',sound:'mdq_snd',
+};
+const ld=k=>{try{return JSON.parse(localStorage.getItem(k))}catch{return null}};
+const sv=(k,v)=>localStorage.setItem(k,JSON.stringify(v));
+
+// ============================================================
+// STATE
+// ============================================================
+let habits=ld(K.habits)||[
+  {id:1,name:'Bangun Pagi',xp:10},{id:2,name:'Shalat Subuh',xp:20},
+  {id:3,name:'Minum Air Putih',xp:5},{id:4,name:'Sarapan Sehat',xp:5},
+  {id:5,name:'Membaca Buku',xp:15},{id:6,name:'Belajar',xp:20},
+  {id:7,name:'Olahraga',xp:15},{id:8,name:'Tidur Tepat Waktu',xp:10},
+];
+let hdone=ld(K.hdone)||{};
+let fins=ld(K.fin)||[];
+let finCats=ld(K.finCats)||[];
+let savings=ld(K.savings)||[];
+let goals=ld(K.goals)||[];
+let goalCats=ld(K.goalCats)||[];
+let healthData=ld(K.health)||[];
+let ibdone=ld(K.ibdone)||{};
+let profile=ld(K.profile)||{name:'',univ:'',prodi:''};
+let xp=ld(K.xp)||0;
+let streak=ld(K.streak)||0;
+let lastDate=ld(K.lastDate)||'';
+let isDark=ld(K.dark)!==false;
+let earnedAch=ld(K.earned)||[];
+let notifs=ld(K.notifs)||[];
+let olahragaLog=ld(K.olahraga)||[];
+let weekXP=ld(K.weekXP)||new Array(7).fill(0);
+let weekPomo=ld(K.weekPomo)||new Array(7).fill(0);
+let habitLog=ld(K.habitLog)||{};
+let pomoDone=ld(K.pomo)||{sessions:0,totalMin:0};
+let soundOn=ld(K.sound)!==false;
+
+// Pomodoro state
+let pomoMin=25,pomoSec=0,pomoRunning=false,pomoBreak=false,pomoTimer=null;
+// Calendar state
+let calY=null,calM=null;
+// Current page
+let curPage='dashboard';
+// Charts
+let dashChart=null,habitChart=null,ibChart=null,hChart=null,olaChart=null,pomoChart=null,fChart=null,fCatChart=null;
+// Goal filter
+let goalFilter='all';
+// Habit recap period
+let habitRecapPeriod='harian';
+
+// ============================================================
+// UTILS
+// ============================================================
+const uid=()=>Math.random().toString(36).slice(2,11);
+const todayKey=()=>{const n=new Date();return n.getFullYear()+'-'+(n.getMonth()+1)+'-'+n.getDate()};
+const fRp=n=>'Rp '+(Math.round(n)||0).toLocaleString('id-ID');
+function addNotif(msg){notifs.unshift({msg,t:new Date().toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})});if(notifs.length>30)notifs.pop();sv(K.notifs,notifs);const b=document.getElementById('notif-badge');if(b){b.textContent=Math.min(notifs.length,9);b.classList.add('show');}}
+
+// ============================================================
+// TOAST QUEUE
+// ============================================================
+let _tq=[],_ta=false;
+function toast(msg,color){_tq.push({msg,color});if(!_ta)_pq();}
+function _pq(){
+  if(!_tq.length){_ta=false;return;}_ta=true;
+  const {msg,color}=_tq.shift();
+  const t=document.getElementById('toast');
+  t.textContent=msg;t.style.color=color||'var(--cyan)';t.classList.add('show');
+  setTimeout(()=>{t.classList.remove('show');setTimeout(_pq,250);},1800);
+}
+
+// ============================================================
+// SOUND
+// ============================================================
+let audioCtx=null;
+function beep(freq,type,vol,dur){
+  if(!soundOn)return;
+  try{if(!audioCtx)audioCtx=new(window.AudioContext||window.webkitAudioContext)();const o=audioCtx.createOscillator(),g=audioCtx.createGain();o.connect(g);g.connect(audioCtx.destination);o.type=type;o.frequency.value=freq;g.gain.value=vol;o.start();g.gain.exponentialRampToValueAtTime(0.001,audioCtx.currentTime+dur);o.stop(audioCtx.currentTime+dur);}catch{}
+}
+function playS(t){
+  const m={click:()=>beep(440,'sine',.08,.06),complete:()=>{beep(523,'sine',.1,.1);setTimeout(()=>beep(659,'sine',.1,.1),100);setTimeout(()=>beep(784,'sine',.18,.12),200)},xp:()=>beep(880,'sine',.1,.08),achievement:()=>[523,659,784,1047].forEach((f,i)=>setTimeout(()=>beep(f,'sine',.18,.14),i*70)),levelup:()=>[523,659,784,1047,1319].forEach((f,i)=>setTimeout(()=>beep(f,'triangle',.22,.16),i*90))};
+  if(m[t])m[t]();
+}
+document.getElementById('btn-mute').addEventListener('click',()=>{
+  soundOn=!soundOn;sv(K.sound,soundOn);
+  document.getElementById('btn-mute').textContent=soundOn?'🔊':'🔇';
+  toast(soundOn?'🔊 Suara Aktif':'🔇 Muted');
+});
+document.getElementById('btn-mute').textContent=soundOn?'🔊':'🔇';
+
+// ============================================================
+// DARK/LIGHT
+// ============================================================
+function applyTheme(){document.body.classList.toggle('light',!isDark);document.getElementById('btn-dark').textContent=isDark?'☀️':'🌙';}
+applyTheme();
+document.getElementById('btn-dark').addEventListener('click',()=>{isDark=!isDark;sv(K.dark,isDark);applyTheme();});
+
+// ============================================================
+// NOTIFICATIONS PANEL
+// ============================================================
+document.getElementById('btn-notif').addEventListener('click',()=>{
+  const p=document.getElementById('notif-panel');
+  const open=p.classList.toggle('open');
+  if(open){
+    document.getElementById('notif-list').innerHTML=notifs.length?notifs.map(n=>`<div class="notif-item"><span class="notif-dot"></span><span>${n.t} — ${n.msg}</span></div>`).join(''):'<div style="font-size:12px;color:var(--text3)">Belum ada notifikasi.</div>';
+    document.getElementById('notif-badge').classList.remove('show');
+  }
+});
+document.addEventListener('click',e=>{const p=document.getElementById('notif-panel');if(!p.contains(e.target)&&e.target.id!=='btn-notif')p.classList.remove('open');});
+
+// ============================================================
+// XP FLOAT & CONFETTI
+// ============================================================
+function showXPFloat(n){const d=document.createElement('div');d.className='xp-float';d.textContent='+'+n+' XP';document.body.appendChild(d);setTimeout(()=>d.remove(),1200);}
+function confetti(){const colors=['#22D3EE','#34D399','#FBBF24','#F87171','#A78BFA'];for(let i=0;i<14;i++){const d=document.createElement('div');d.className='confetti-piece';d.style.cssText=`left:${20+Math.random()*60}%;top:20%;background:${colors[i%5]};animation-delay:${Math.random()*.4}s`;document.body.appendChild(d);setTimeout(()=>d.remove(),2000);}}
+
+// ============================================================
+// STREAK / RESET CHECK
+// ============================================================
+function checkReset(){
+  const today=todayKey();
+  if(lastDate===today)return;
+  if(lastDate){
+    const last=new Date(lastDate.replace(/-/g,'/')),now=new Date();
+    const diff=Math.round((now-last)/86400000);
+    if(diff===1){streak++;sv(K.streak,streak);addNotif('🔥 Streak '+streak+' hari! Pertahankan!');}
+    else if(diff>1){streak=1;sv(K.streak,streak);toast('💔 Streak reset. Mulai lagi!','var(--red)');}
+  }else{streak=1;sv(K.streak,streak);}
+  hdone={};sv(K.hdone,hdone);
+  ibdone={};sv(K.ibdone,ibdone);
+  lastDate=today;sv(K.lastDate,lastDate);
+}
+checkReset();
+
+// ============================================================
+// LEVEL / XP
+// ============================================================
+function getLevel(){return LEVELS.find((l,i)=>xp<l.max||i===LEVELS.length-1)||LEVELS[0];}
+function addXP(n){
+  const prev=getLevel();xp+=n;sv(K.xp,xp);showXPFloat(n);playS('xp');
+  const dayIdx=new Date().getDay();
+  weekXP[dayIdx]=(weekXP[dayIdx]||0)+n;sv(K.weekXP,weekXP);
+  const cur=getLevel();
+  if(cur!==prev){toast('🎉 LEVEL UP! '+cur.icon+' '+cur.name+'!','var(--amber)');playS('levelup');confetti();addNotif('🎉 LEVEL UP ke '+cur.name+'! '+cur.icon);}
+  checkAchievements();
+}
+
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+function checkAchievements(){
+  ACH_DEF.forEach(a=>{
+    if(!earnedAch.includes(a.id)&&a.check()){
+      earnedAch.push(a.id);sv(K.earned,earnedAch);
+      xp+=a.xp;sv(K.xp,xp);
+      toast(a.icon+' Achievement: '+a.name+' +'+a.xp+' XP!','var(--amber)');
+      playS('achievement');confetti();
+      addNotif('🏆 "'+a.name+'" terbuka! +'+a.xp+' XP');
+    }
+  });
+}
+
+// ============================================================
+// CHART HELPERS
+// ============================================================
+const CG=id=>document.getElementById(id)?.getContext('2d');
+const CC=()=>isDark?'rgba(255,255,255,.07)':'rgba(0,0,0,.06)';
+const chartOpts={responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false},tooltip:{bodyFont:{family:'Share Tech Mono',size:11}}},scales:{x:{grid:{color:CC()},ticks:{color:'#94A3B8',font:{family:'Rajdhani',size:10}}},y:{grid:{color:CC()},ticks:{color:'#94A3B8',font:{family:'Rajdhani',size:10}}}}};
+function mkBar(id,labels,data,color,ref){const ctx=CG(id);if(!ctx)return ref;if(ref)ref.destroy();return new Chart(ctx,{type:'bar',data:{labels,datasets:[{data,backgroundColor:color+'44',borderColor:color,borderWidth:1.5,borderRadius:4}]},options:{...chartOpts}});}
+function mkLine(id,labels,data,color,ref){const ctx=CG(id);if(!ctx)return ref;if(ref)ref.destroy();return new Chart(ctx,{type:'line',data:{labels,datasets:[{data,borderColor:color,backgroundColor:color+'22',fill:true,tension:.4,pointRadius:3,pointBackgroundColor:color}]},options:{...chartOpts}});}
+function mkDoughnut(id,labels,data,colors,ref){const ctx=CG(id);if(!ctx)return ref;if(ref)ref.destroy();return new Chart(ctx,{type:'doughnut',data:{labels,datasets:[{data,backgroundColor:colors.map(c=>c+'88'),borderColor:colors,borderWidth:1.5}]},options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{position:'right',labels:{color:'#94A3B8',font:{family:'Rajdhani',size:10},boxWidth:10}}}}});}
+
+// ============================================================
+// NAVIGATION
+// ============================================================
+function nav(name){
+  document.querySelectorAll('.page').forEach(p=>{p.classList.remove('active');p.style.display='none';});
+  const pg=document.getElementById('pg-'+name);
+  if(pg){pg.classList.add('active');pg.style.display='block';}
+  document.querySelectorAll('.nav-item').forEach(n=>n.classList.toggle('active',n.dataset.nav===name));
+  curPage=name;
+  document.getElementById('main').scrollTop=0;
+  playS('click');
+  const fns={dashboard:renderDash,habits:renderHabits,ibadah:renderIbadah,health:renderHealth,more:()=>{},finance:renderFin,goals:renderGoals,pomodoro:renderPomo,calendar:renderCal,achievements:renderAchievements,settings:renderSettings};
+  if(fns[name])fns[name]();
+}
+document.querySelectorAll('.nav-item').forEach(b=>b.addEventListener('click',()=>nav(b.dataset.nav)));
+
+// ============================================================
+// MODAL HELPERS
+// ============================================================
+function openOv(id){document.getElementById('ov-'+id)?.classList.add('open');}
+function closeOv(){document.querySelectorAll('.overlay.open').forEach(o=>o.classList.remove('open'));}
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)closeOv();}));
+
+// ============================================================
+// DASHBOARD
+// ============================================================
+function renderDash(){
+  const now=new Date(),h=now.getHours();
+  const gt=h<5?'MALAM':h<12?'PAGI':h<15?'SIANG':h<18?'SORE':'MALAM';
+  document.getElementById('gr-text').innerHTML=`SELAMAT ${gt}, <span style="color:var(--cyan)">${(profile.name||'PLAYER').toUpperCase()}</span> 👋`;
+  const days=['MIN','SEN','SEL','RAB','KAM','JUM','SAB'];
+  const months=['JAN','FEB','MAR','APR','MEI','JUN','JUL','AGS','SEP','OKT','NOV','DES'];
+  document.getElementById('gr-time').textContent=`${days[now.getDay()]} ${now.getDate()} ${months[now.getMonth()]} ${now.getFullYear()} — ${now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'})}`;
+  const qIdx=(now.getDate()+now.getMonth()*7)%QUOTES.length;
+  const q=QUOTES[qIdx];
+  document.getElementById('gr-quote').innerHTML='"'+q.text+'"<span style="display:block;margin-top:3px;font-style:normal;font-weight:700;color:var(--cyan)">— '+q.author+'</span>';
+  document.getElementById('mentor-msg').textContent=MENTOR_MSGS[streak%MENTOR_MSGS.length];
+
+  // Level/XP
+  const lv=getLevel();
+  const bd=document.getElementById('lv-badge');bd.className='level-badge '+(lv.cls||'');
+  document.getElementById('lv-name').textContent=lv.icon+' '+lv.name;
+  document.getElementById('xp-cur').textContent=xp;
+  document.getElementById('xp-nxt').textContent=lv.max===99999?'∞':lv.max;
+  document.getElementById('str-cnt').textContent=streak;
+  const pct=lv.max===99999?100:Math.round(((xp-lv.min)/(lv.max-lv.min))*100);
+  document.getElementById('xp-bar').style.width=Math.max(2,pct)+'%';
+
+  // Stats
+  const dn=Object.values(hdone).filter(Boolean).length;
+  const habitPct=habits.length?Math.round(dn/habits.length*100):0;
+  const ibDn=IBADAH_FULL.filter(i=>ibdone[i.id]).length;
+  const ibPct=Math.round(ibDn/IBADAH_FULL.length*100);
+  const inc=fins.filter(f=>f.type==='in').reduce((a,f)=>a+f.amt,0);
+  const exp=fins.filter(f=>f.type==='out').reduce((a,f)=>a+f.amt,0);
+  const saldo=inc-exp;
+  const focusMin=pomoDone.totalMin||0;
+
+  document.getElementById('ds-habit').textContent=habitPct+'%';
+  document.getElementById('ds-ib').textContent=ibPct+'%';
+  document.getElementById('ds-saldo').textContent=saldo>=0?'+'+(saldo/1000).toFixed(0)+'K':((saldo/1000).toFixed(0))+'K';
+  document.getElementById('ds-focus').textContent=focusMin>=60?Math.floor(focusMin/60)+'j':focusMin+'m';
+
+  // Progress bars
+  const healthPct=calcHealthPct();
+  document.getElementById('pp-habit').textContent=habitPct+'%';
+  document.getElementById('pb-habit').style.width=habitPct+'%';
+  document.getElementById('pp-ib').textContent=ibPct+'%';
+  document.getElementById('pb-ib').style.width=ibPct+'%';
+  document.getElementById('pp-health').textContent=healthPct+'%';
+  document.getElementById('pb-health').style.width=healthPct+'%';
+
+  // Dash habits (top 5)
+  document.getElementById('dash-habits').innerHTML=habits.slice(0,5).map(h=>{
+    const d=hdone[h.id]||false;
+    return `<div class="habit-row"><div class="hchk ${d?'on':''}" onclick="toggleHDash(${h.id})">${d?'✓':''}</div><div class="hlabel ${d?'on':''}">${h.name}</div><div class="hxp">+${h.xp} XP</div></div>`;
+  }).join('')||'<div class="empty"><span class="empty-icon">✅</span><p>Belum ada habit. Tambah di tab Habit!</p></div>';
+
+  // Target Tabungan terdekat
+  const nearSaving=savings.filter(s=>s.collected<s.target).sort((a,b)=>{if(!a.deadline)return 1;if(!b.deadline)return -1;return a.deadline.localeCompare(b.deadline);})[0];
+  const dspPanel=document.getElementById('dash-saving-panel');
+  const dspEl=document.getElementById('dash-saving');
+  if(nearSaving){
+    dspPanel.style.display='';
+    const pct=Math.min(100,Math.round(nearSaving.collected/nearSaving.target*100));
+    dspEl.innerHTML=`<div class="saving-name">${nearSaving.name}</div><div class="saving-amt">${fRp(nearSaving.collected)} <span style="font-size:13px;color:var(--text3)">/ ${fRp(nearSaving.target)}</span></div><div style="margin-top:8px"><div class="prog-bar"><div class="prog-fill pf-green" style="width:${pct}%"></div></div><div style="font-size:11px;color:var(--text2);margin-top:4px">${pct}% terkumpul${nearSaving.deadline?' • Deadline: '+nearSaving.deadline:''}</div></div>`;
+  }else{dspPanel.style.display=savings.length?'':'none';if(savings.length){dspEl.innerHTML='<div style="font-size:12px;color:var(--green)">✅ Semua target tabungan tercapai!</div>';}}
+
+  // Progress Cita-Cita (top 3)
+  const gPanel=document.getElementById('dash-goals-panel');
+  const gEl=document.getElementById('dash-goals');
+  const activeGoals=goals.filter(g=>g.current<g.target).slice(0,3);
+  if(activeGoals.length){
+    gPanel.style.display='';
+    gEl.innerHTML=activeGoals.map(g=>{
+      const pct=Math.min(100,Math.round(g.current/g.target*100));
+      const cat=goalCats.find(c=>c.id===g.catId);
+      return `<div style="margin-bottom:10px"><div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:4px"><span>${cat?cat.icon:''} ${g.name}</span><span style="font-family:var(--font-mono);color:var(--purple)">${g.current}/${g.target} ${g.unit||''}</span></div><div class="prog-bar"><div class="prog-fill pf-purple" style="width:${pct}%"></div></div></div>`;
+    }).join('');
+  }else{gPanel.style.display=goals.length?'':'none';}
+
+  // Badges
+  const recent=ACH_DEF.filter(a=>earnedAch.includes(a.id)).slice(-4);
+  document.getElementById('dash-badges').innerHTML=recent.length?recent.map(a=>`<div class="ach-tile earned"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div></div>`).join(''):ACH_DEF.slice(0,4).map(a=>`<div class="ach-tile"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div></div>`).join('');
+
+  // XP chart
+  const dayIdx=new Date().getDay();
+  const xpLabels=[];for(let i=6;i>=0;i--)xpLabels.push(DAY_LABELS[(dayIdx-i+7)%7]);
+  const xpData=[...weekXP.slice(dayIdx+1),...weekXP.slice(0,dayIdx+1)];
+  dashChart=mkBar('dash-chart',xpLabels,xpData,'#22D3EE',dashChart);
+}
+function toggleHDash(id){
+  hdone[id]=!hdone[id];
+  const h=habits.find(x=>x.id===id);
+  if(hdone[id]&&h){addXP(h.xp);toast('✅ +'+h.xp+' XP!','var(--green)');playS('complete');}
+  else if(!hdone[id]&&h){xp=Math.max(0,xp-h.xp);sv(K.xp,xp);}
+  sv(K.hdone,hdone);habitLog[todayKey()]={...hdone};sv(K.habitLog,habitLog);
+  renderDash();
+}
+function calcHealthPct(){
+  const today=healthData.find(d=>d.date===todayKey())||{};
+  let p=0;
+  if(today.water>=8)p+=34;else if(today.water>0)p+=Math.round(today.water/8*34);
+  if(today.sleep>=7)p+=33;else if(today.sleep>0)p+=Math.round(today.sleep/8*33);
+  if(today.exercise>=30)p+=33;else if(today.exercise>0)p+=Math.round(today.exercise/30*33);
+  return Math.min(100,p);
+}
+setInterval(()=>{if(curPage==='dashboard')document.getElementById('gr-time')&&renderDash();},30000);
+
+// ============================================================
+// HABITS
+// ============================================================
+function renderHabits(){
+  const dn=Object.values(hdone).filter(Boolean).length,tot=habits.length;
+  const pct=tot?Math.round(dn/tot*100):0;
+  document.getElementById('hbt-cnt').textContent=dn+'/'+tot;
+  document.getElementById('hbt-prog').style.width=pct+'%';
+  document.getElementById('habit-list').innerHTML=habits.map(h=>{
+    const d=hdone[h.id]||false;
+    return `<div class="habit-row"><div class="hchk ${d?'on':''}" onclick="toggleH(${h.id})">${d?'✓':''}</div><div class="hlabel ${d?'on':''}">${h.name}</div><div class="hxp">+${h.xp} XP</div><div class="h-acts"><button class="btn-icon" onclick="editH(${h.id})">✏️</button><button class="btn-icon" onclick="delH(${h.id})">🗑️</button></div></div>`;
+  }).join('')||'<div class="empty"><span class="empty-icon">✅</span><p>Belum ada habit. Tambah yang pertama!</p></div>';
+  // Chart
+  const dayIdx=new Date().getDay();
+  const labels=[];for(let i=6;i>=0;i--)labels.push(DAY_LABELS[(dayIdx-i+7)%7]);
+  const data=habits.length?[...Array(6).fill(Math.floor(habits.length*0.6)),dn]:Array(7).fill(0);
+  habitChart=mkBar('habit-chart',labels,data,'#34D399',habitChart);
+  renderHabitRecap(habitRecapPeriod);
+}
+function toggleH(id){
+  hdone[id]=!hdone[id];
+  const h=habits.find(x=>x.id===id);
+  if(hdone[id]&&h){addXP(h.xp);toast('✅ +'+h.xp+' XP!','var(--green)');playS('complete');}
+  else if(!hdone[id]&&h){xp=Math.max(0,xp-h.xp);sv(K.xp,xp);}
+  sv(K.hdone,hdone);habitLog[todayKey()]={...hdone};sv(K.habitLog,habitLog);
+  renderHabits();
+}
+function editH(id){const h=habits.find(x=>x.id===id);document.getElementById('mh-name').value=h.name;document.getElementById('mh-xp').value=h.xp;document.getElementById('mh-id').value=id;document.getElementById('mhbt-title').textContent='✏️ EDIT HABIT';openOv('habit');}
+function delH(id){if(!confirm('Hapus habit ini?'))return;habits=habits.filter(x=>x.id!==id);delete hdone[id];sv(K.habits,habits);sv(K.hdone,hdone);renderHabits();toast('🗑️ Habit dihapus');}
+document.getElementById('btn-add-habit').onclick=()=>{document.getElementById('mh-name').value='';document.getElementById('mh-xp').value=10;document.getElementById('mh-id').value='';document.getElementById('mhbt-title').textContent='✅ ADD HABIT';openOv('habit');};
+document.getElementById('btn-save-habit').onclick=()=>{
+  const name=document.getElementById('mh-name').value.trim();
+  const xpv=parseInt(document.getElementById('mh-xp').value)||10;
+  const eid=document.getElementById('mh-id').value;
+  if(!name)return toast('⚠️ Nama tidak boleh kosong','var(--red)');
+  if(eid)habits=habits.map(h=>h.id==eid?{...h,name,xp:xpv}:h);
+  else habits.push({id:Date.now(),name,xp:xpv});
+  sv(K.habits,habits);closeOv();renderHabits();toast('💾 Habit disimpan!');
+};
+function renderHabitRecap(period){
+  habitRecapPeriod=period;
+  const el=document.getElementById('habit-recap-content');if(!el)return;
+  const now=new Date();let rows=[];
+  if(period==='harian'){
+    const log=habitLog[todayKey()]||hdone;
+    const done=habits.filter(h=>log[h.id]).length;
+    rows=[{lbl:'Habit Selesai Hari Ini',val:done+'/'+habits.length},{lbl:'Persentase',val:habits.length?Math.round(done/habits.length*100)+'%':'0%'},{lbl:'XP Diperoleh',val:habits.filter(h=>log[h.id]).reduce((a,h)=>a+h.xp,0)+' XP'}];
+  }else if(period==='mingguan'){
+    let td=0,tp=0,best=0,bestLbl='';
+    for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const dk=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();const log=habitLog[dk]||(i===0?hdone:{});const done=habits.filter(h=>log[h.id]).length;td+=done;tp+=habits.length;if(done>best){best=done;bestLbl=DAY_LABELS[d.getDay()];}}
+    rows=[{lbl:'Total Selesai (7 hari)',val:td},{lbl:'Rata-rata/Hari',val:Math.round(td/7)+'/'+habits.length},{lbl:'Persentase',val:tp?Math.round(td/tp*100)+'%':'0%'},{lbl:'Hari Terbaik',val:bestLbl||'-'}];
+  }else{
+    let td=0,tp=0;
+    for(let i=29;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const dk=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();const log=habitLog[dk]||(i===0?hdone:{});td+=habits.filter(h=>log[h.id]).length;tp+=habits.length;}
+    rows=[{lbl:'Total Selesai (30 hari)',val:td},{lbl:'Rata-rata/Hari',val:Math.round(td/30)+'/'+habits.length},{lbl:'Persentase',val:tp?Math.round(td/tp*100)+'%':'0%'},{lbl:'Streak',val:streak+' hari'}];
+  }
+  el.innerHTML='<div class="recap-panel">'+rows.map(r=>`<div class="recap-row"><span class="recap-lbl">${r.lbl}</span><span class="recap-val">${r.val}</span></div>`).join('')+'</div>';
+}
+document.querySelectorAll('#habit-recap-tabs .tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#habit-recap-tabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderHabitRecap(b.dataset.hrt);}));
+
+// ============================================================
+// IBADAH
+// ============================================================
+function renderIbadah(){
+  const done=IBADAH_FULL.filter(i=>ibdone[i.id]).length;
+  const pct=Math.round(done/IBADAH_FULL.length*100);
+  document.getElementById('ib-pct').textContent=pct+'%';
+  document.getElementById('ib-bar').style.width=pct+'%';
+  document.getElementById('ib-list').innerHTML=IBADAH_FULL.map(ib=>`<div class="ib-row"><span class="ib-name">${ib.name}</span><div style="display:flex;align-items:center;gap:8px"><span style="font-family:var(--font-mono);font-size:11px;color:var(--amber)">+${ib.xp} XP</span><div class="toggle ${ibdone[ib.id]?'on':''}" onclick="toggleIb('${ib.id}',${ib.xp})"></div></div></div>`).join('');
+  const sholat5=['subuh','dzuhur','ashar','maghrib','isya'];
+  const s5=sholat5.filter(id=>ibdone[id]).length;
+  const sunnah=['tilawah','dzikir','dhuha','tahajud'].filter(id=>ibdone[id]).length;
+  document.getElementById('ib-stats').innerHTML=`<div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:6px"><div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-family:var(--font-hud);font-size:20px;color:var(--amber)">${s5}/5</div><div style="font-size:10px;color:var(--text3)">Sholat Wajib</div></div><div style="background:var(--bg3);border-radius:8px;padding:8px;text-align:center"><div style="font-family:var(--font-hud);font-size:20px;color:var(--purple)">${sunnah}/4</div><div style="font-size:10px;color:var(--text3)">Ibadah Sunnah</div></div></div>`;
+  const dayIdx=new Date().getDay();const labels=[];for(let i=6;i>=0;i--)labels.push(DAY_LABELS[(dayIdx-i+7)%7]);
+  ibChart=mkBar('ib-chart',labels,[...Array(6).fill(Math.floor(IBADAH_FULL.length*0.6)),done],'#FBBF24',ibChart);
+}
+function toggleIb(id,xpGain){
+  ibdone[id]=!ibdone[id];
+  if(ibdone[id]){addXP(xpGain);toast('🕌 Ibadah dicatat! +'+xpGain+' XP','var(--amber)');playS('complete');}
+  else{xp=Math.max(0,xp-xpGain);sv(K.xp,xp);}
+  sv(K.ibdone,ibdone);renderIbadah();checkAchievements();
+}
+
+// ============================================================
+// HEALTH
+// ============================================================
+function renderHealth(){
+  const today=healthData.find(d=>d.date===todayKey())||{};
+  const tiles=[
+    {icon:'💧',lbl:'Air',val:today.water||0,unit:'gelas',key:'water'},
+    {icon:'😴',lbl:'Tidur',val:today.sleep||0,unit:'jam',key:'sleep'},
+    {icon:'🏃',lbl:'Olahraga',val:today.exercise||0,unit:'mnt',key:'exercise'},
+    {icon:'⚖️',lbl:'Berat',val:today.weight||'-',unit:'kg',key:'weight'},
+  ];
+  document.getElementById('htrack-grid').innerHTML=tiles.map(t=>`<div class="htrack-tile" onclick="incrementHealth('${t.key}')"><span class="htrack-icon">${t.icon}</span><div class="htrack-lbl">${t.lbl}</div><div class="htrack-val">${t.val} ${t.unit}</div></div>`).join('');
+  document.getElementById('health-sum').innerHTML=`<div class="health-row"><div class="hm-ico">⚖️</div><div><div class="hm-lbl">Berat Badan</div><div class="hm-val">${today.weight||'-'} kg</div></div></div><div class="health-row"><div class="hm-ico">💧</div><div><div class="hm-lbl">Air Putih</div><div class="hm-val">${today.water||0} gelas</div></div></div><div class="health-row"><div class="hm-ico">😴</div><div><div class="hm-lbl">Jam Tidur</div><div class="hm-val">${today.sleep||0} jam</div></div></div><div class="health-row"><div class="hm-ico">🏃</div><div><div class="hm-lbl">Olahraga</div><div class="hm-val">${today.exercise||0} menit</div></div></div>`;
+  if(document.getElementById('h-w')){document.getElementById('h-w').value=today.weight||'';document.getElementById('h-h').value=today.height||'';document.getElementById('h-s').value=today.sleep||'';document.getElementById('h-aw').value=today.water||'';document.getElementById('h-ex').value=today.exercise||'';}
+  const wData=healthData.slice(-7).map(d=>d.weight||0);
+  const wLabels=healthData.slice(-7).map(d=>d.date.split('-').slice(1).join('/'));
+  hChart=mkLine('health-chart',wLabels.length?wLabels:['Hari ini'],wData,'#22D3EE',hChart);
+  // Olahraga grid
+  document.getElementById('olahraga-grid').innerHTML=OLAHRAGA_LIST.map(o=>`<div class="qa-btn" onclick="logOlahraga('${o.name}',${o.xp})"><span class="qa-icon">${o.icon}</span><div class="qa-lbl">${o.name}</div><div style="font-family:var(--font-mono);font-size:10px;color:var(--amber)">+${o.xp} XP</div></div>`).join('');
+  const olaLabels=[],olaData=[];
+  for(let i=6;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i);const dk=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();olaLabels.push(DAY_LABELS[d.getDay()]);olaData.push(olahragaLog.filter(o=>o.date===dk).length);}
+  olaChart=mkBar('ola-chart',olaLabels,olaData,'#34D399',olaChart);
+  // Vitamin
+  document.getElementById('vitamin-list').innerHTML=VITAMINS.map(v=>`<div class="info-card"><div class="info-card-hd"><span class="info-card-icon">${v.icon}</span><span class="info-card-title">${v.name}</span></div><div class="info-card-body"><strong>Fungsi:</strong> ${v.fungsi}<br><strong>Manfaat:</strong> ${v.manfaat}<br><strong>Sumber:</strong> ${v.sumber}<br><strong>Dosis:</strong> ${v.dosis}</div></div>`).join('');
+  document.getElementById('penyakit-list').innerHTML=PENYAKIT.map(p=>`<div class="info-card"><div class="info-card-hd"><span class="info-card-icon">${p.icon}</span><span class="info-card-title">${p.name}</span></div><div class="info-card-body"><strong>Gejala:</strong> ${p.gejala}<br><strong>Penanganan:</strong> ${p.penanganan}</div><div class="info-alert">⚕️ Segera ke dokter jika: ${p.kapan}</div></div>`).join('');
+  document.getElementById('tips-list').innerHTML=HEALTH_TIPS.map(t=>`<div class="info-card"><div class="info-card-hd"><span class="info-card-icon">${t.icon}</span><span class="info-card-title">${t.title}</span></div><div class="info-card-body">${t.tip}</div></div>`).join('');
+}
+function incrementHealth(key){
+  let today=healthData.find(d=>d.date===todayKey());
+  if(!today){today={date:todayKey()};healthData.push(today);}
+  if(key==='water'){today.water=(today.water||0)+1;if(today.water%2===0){addXP(5);toast('💧 +1 gelas! +5 XP','var(--cyan)');}}
+  else if(key==='weight'){const v=prompt('Berat badan (kg):',today.weight||'');if(v)today.weight=parseFloat(v);}
+  else if(key==='sleep'){const v=prompt('Jam tidur:',today.sleep||'');if(v)today.sleep=parseFloat(v);}
+  else if(key==='exercise'){today.exercise=(today.exercise||0)+10;toast('🏃 Olahraga +10 mnt','var(--green)');}
+  sv(K.health,healthData);renderHealth();
+}
+function logOlahraga(name,xpGain){
+  olahragaLog.push({name,date:todayKey(),xp:xpGain});sv(K.olahraga,olahragaLog);
+  addXP(xpGain);toast('🏃 '+name+'! +'+xpGain+' XP','var(--green)');playS('complete');renderHealth();
+}
+document.getElementById('btn-save-h').onclick=()=>{
+  let today=healthData.find(d=>d.date===todayKey());
+  if(!today){today={date:todayKey()};healthData.push(today);}
+  today.weight=parseFloat(document.getElementById('h-w').value)||today.weight;
+  today.height=parseFloat(document.getElementById('h-h').value)||today.height;
+  today.sleep=parseFloat(document.getElementById('h-s').value)||today.sleep;
+  today.water=parseInt(document.getElementById('h-aw').value)||today.water;
+  today.exercise=parseInt(document.getElementById('h-ex').value)||today.exercise;
+  sv(K.health,healthData);renderHealth();toast('💾 Data kesehatan disimpan!');
+};
+document.querySelectorAll('#health-tabs .tab').forEach(b=>b.addEventListener('click',()=>{
+  document.querySelectorAll('#health-tabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');
+  ['tracker','olahraga','vitamin','penyakit','tips'].forEach(t=>document.getElementById('ht-'+t).style.display=t===b.dataset.ht?'':'none');
+  playS('click');
+}));
+
+// ============================================================
+// FINANCE — CATEGORIES
+// ============================================================
+function renderFinCats(){
+  const el=document.getElementById('fincat-list');if(!el)return;
+  el.innerHTML=finCats.map(c=>`<div class="cat-tag" style="position:relative">${c.name}<button class="btn-icon" style="font-size:11px;padding:0 2px;margin-left:2px" onclick="delFinCat('${c.id}')">✕</button></div>`).join('')||'<div style="font-size:12px;color:var(--text3)">Belum ada kategori. Tambah dulu.</div>';
+  // Populate selects
+  const opts=finCats.map(c=>`<option value="${c.name}">${c.name}</option>`).join('');
+  ['mf-cat','mfe-cat'].forEach(id=>{const el=document.getElementById(id);if(el){el.innerHTML=opts||'<option value="">-- Belum ada kategori --</option>';}});
+}
+function delFinCat(id){if(!confirm('Hapus kategori ini?'))return;finCats=finCats.filter(c=>c.id!==id);sv(K.finCats,finCats);renderFinCats();toast('🗑️ Kategori dihapus');}
+document.getElementById('btn-add-fincat').onclick=()=>{document.getElementById('mfc-name').value='';document.getElementById('mfc-id').value='';openOv('fincat');};
+document.getElementById('btn-save-fincat').onclick=()=>{
+  const name=document.getElementById('mfc-name').value.trim();if(!name)return;
+  const eid=document.getElementById('mfc-id').value;
+  if(eid)finCats=finCats.map(c=>c.id===eid?{...c,name}:c);
+  else finCats.push({id:uid(),name});
+  sv(K.finCats,finCats);closeOv();renderFinCats();toast('💾 Kategori disimpan!');
+};
+
+// ============================================================
+// FINANCE — TRANSACTIONS
+// ============================================================
+function renderFin(){
+  renderFinCats();
+  const inc=fins.filter(f=>f.type==='in').reduce((a,f)=>a+f.amt,0);
+  const exp=fins.filter(f=>f.type==='out').reduce((a,f)=>a+f.amt,0);
+  document.getElementById('fin-bal').textContent=fRp(inc-exp);
+  document.getElementById('fin-in').textContent=fRp(inc);
+  document.getElementById('fin-out').textContent=fRp(exp);
+  document.getElementById('fin-count').textContent=fins.length+' transaksi';
+  // List (latest 30)
+  document.getElementById('fin-list').innerHTML=fins.slice().reverse().slice(0,30).map(f=>`<div class="fin-row"><div class="fin-ico ${f.type==='in'?'fi-in':'fi-out'}">${f.type==='in'?'💚':'🔴'}</div><div style="flex:1;min-width:0"><div style="font-size:13px;font-weight:600;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${f.desc||f.cat}</div><div style="font-size:11px;font-family:var(--font-mono);color:var(--text3)">${f.cat} • ${f.date}</div></div><div style="display:flex;align-items:center;gap:3px;flex-shrink:0"><div class="fin-amt ${f.type==='in'?'in':'out'}">${f.type==='in'?'+':'-'}${fRp(f.amt)}</div><button class="btn-icon" onclick="editFin('${f.id}')">✏️</button><button class="btn-icon" onclick="delFin('${f.id}')">🗑️</button></div></div>`).join('')||'<div class="empty"><span class="empty-icon">💰</span><p>Belum ada transaksi.</p></div>';
+  // Charts
+  const now=new Date();const dayIdx=now.getDay();
+  const dayLabels=[],dayData=[];
+  for(let i=6;i>=0;i--){const d=new Date(now);d.setDate(d.getDate()-i);const dk=d.getFullYear()+'-'+(d.getMonth()+1)+'-'+d.getDate();dayLabels.push(DAY_LABELS[d.getDay()]);dayData.push(fins.filter(f=>f.type==='out'&&f.date===dk).reduce((s,f)=>s+f.amt,0)/1000);}
+  fChart=mkBar('fin-chart',dayLabels,dayData,'#F87171',fChart);
+  const cats={};fins.filter(f=>f.type==='out').forEach(f=>cats[f.cat]=(cats[f.cat]||0)+f.amt);
+  const catLabels=Object.keys(cats),catData=Object.values(cats);
+  fCatChart=mkDoughnut('fin-cat-chart',catLabels,catData,CAT_COLORS.slice(0,catLabels.length),fCatChart);
+  // Savings
+  renderSavings();
+  // Rekap
+  renderFinRecap(document.querySelector('#fin-recap-tabs .tab.active')?.dataset.frt||'harian');
+}
+function delFin(id){if(!confirm('Hapus transaksi ini?'))return;fins=fins.filter(f=>f.id!==id);sv(K.fin,fins);renderFin();toast('🗑️ Transaksi dihapus');}
+function editFin(id){
+  const f=fins.find(x=>x.id===id);if(!f)return;
+  document.getElementById('mfe-id').value=id;
+  document.getElementById('mfe-date').value=f.date;
+  document.getElementById('mfe-amt').value=f.amt;
+  document.getElementById('mfe-desc').value=f.desc||'';
+  renderFinCats();
+  setTimeout(()=>{document.getElementById('mfe-cat').value=f.cat;},10);
+  openOv('fin-edit');
+}
+document.getElementById('btn-fin-in').onclick=()=>{
+  document.getElementById('mfin-title').textContent='💚 Tambah Pemasukan';
+  document.getElementById('mf-type').value='in';
+  document.getElementById('mf-date').value=todayKey().replace(/-/g,n=>n);
+  document.getElementById('mf-amt').value='';document.getElementById('mf-desc').value='';
+  renderFinCats();openOv('fin');
+};
+document.getElementById('btn-fin-out').onclick=()=>{
+  document.getElementById('mfin-title').textContent='🔴 Tambah Pengeluaran';
+  document.getElementById('mf-type').value='out';
+  document.getElementById('mf-date').value=todayKey().replace(/-/g,n=>n);
+  document.getElementById('mf-amt').value='';document.getElementById('mf-desc').value='';
+  renderFinCats();openOv('fin');
+};
+document.getElementById('btn-save-fin').onclick=()=>{
+  const amt=parseFloat(document.getElementById('mf-amt').value);
+  const cat=document.getElementById('mf-cat').value;
+  const desc=document.getElementById('mf-desc').value.trim();
+  const date=document.getElementById('mf-date').value;
+  if(!amt||!cat)return toast('⚠️ Nominal & kategori wajib diisi','var(--red)');
+  fins.push({id:uid(),type:document.getElementById('mf-type').value,amt,cat,desc,date:date||todayKey()});
+  sv(K.fin,fins);closeOv();renderFin();toast('💾 Transaksi disimpan!');
+};
+document.getElementById('btn-save-fin-edit').onclick=()=>{
+  const id=document.getElementById('mfe-id').value;
+  const amt=parseFloat(document.getElementById('mfe-amt').value);
+  const cat=document.getElementById('mfe-cat').value;
+  if(!amt||!cat)return toast('⚠️ Nominal & kategori wajib diisi','var(--red)');
+  fins=fins.map(f=>f.id===id?{...f,amt,cat,desc:document.getElementById('mfe-desc').value.trim(),date:document.getElementById('mfe-date').value||f.date}:f);
+  sv(K.fin,fins);closeOv();renderFin();toast('✏️ Transaksi diperbarui!');
+};
+
+// ============================================================
+// FINANCE — RECAP
+// ============================================================
+function renderFinRecap(period){
+  const el=document.getElementById('fin-recap-content');if(!el)return;
+  const now=new Date();let subset=[];
+  if(period==='harian'){
+    subset=fins.filter(f=>f.date===todayKey());
+  }else if(period==='mingguan'){
+    const cutoff=new Date(now);cutoff.setDate(cutoff.getDate()-7);
+    subset=fins.filter(f=>{try{return new Date(f.date.replace(/-/g,'/'))>=cutoff;}catch{return false;}});
+  }else if(period==='bulanan'){
+    const cutoff=new Date(now);cutoff.setDate(1);
+    subset=fins.filter(f=>{try{const d=new Date(f.date.replace(/-/g,'/'));return d.getMonth()===now.getMonth()&&d.getFullYear()===now.getFullYear();}catch{return false;}});
+  }else{
+    subset=fins.filter(f=>{try{return new Date(f.date.replace(/-/g,'/')).getFullYear()===now.getFullYear();}catch{return false;}});
+  }
+  const inc=subset.filter(f=>f.type==='in').reduce((a,f)=>a+f.amt,0);
+  const exp=subset.filter(f=>f.type==='out').reduce((a,f)=>a+f.amt,0);
+  const rows=[
+    {lbl:'Total Pemasukan',val:fRp(inc),color:'var(--green)'},
+    {lbl:'Total Pengeluaran',val:fRp(exp),color:'var(--red)'},
+    {lbl:'Saldo',val:fRp(inc-exp),color:inc>=exp?'var(--green)':'var(--red)'},
+    {lbl:'Jumlah Transaksi',val:subset.length+' transaksi'},
+  ];
+  el.innerHTML='<div class="recap-panel">'+rows.map(r=>`<div class="recap-row"><span class="recap-lbl">${r.lbl}</span><span class="recap-val" style="${r.color?'color:'+r.color:''}">${r.val}</span></div>`).join('')+'</div>';
+}
+document.querySelectorAll('#fin-recap-tabs .tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#fin-recap-tabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');renderFinRecap(b.dataset.frt);}));
+
+// ============================================================
+// FINANCE — EXCEL EXPORT
+// ============================================================
+document.getElementById('btn-fin-export').onclick=()=>{
+  try{
+    // Build CSV
+    let csv='Tanggal,Jenis,Kategori,Nominal,Catatan\n';
+    [...fins].sort((a,b)=>a.date.localeCompare(b.date)).forEach(f=>{
+      csv+=`${f.date},${f.type==='in'?'Pemasukan':'Pengeluaran'},${f.cat},${f.amt},"${(f.desc||'').replace(/"/g,"'")}"\n`;
+    });
+    // Rekap bulanan
+    csv+='\nREKAP BULANAN\nBulan,Pemasukan,Pengeluaran,Saldo\n';
+    const months={};fins.forEach(f=>{try{const d=new Date(f.date.replace(/-/g,'/'));const key=d.getFullYear()+'-'+(d.getMonth()+1);if(!months[key])months[key]={in:0,out:0};months[key][f.type]+=f.amt;}catch{}});
+    Object.entries(months).sort((a,b)=>a[0].localeCompare(b[0])).forEach(([key,m])=>{csv+=`${key},${m.in},${m.out},${m.in-m.out}\n`;});
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download='keuangan_mydailyquest.csv';a.click();
+    toast('📥 File CSV berhasil diunduh!','var(--green)');
+  }catch(e){toast('❌ Export gagal','var(--red)');}
+};
+
+// ============================================================
+// SAVINGS (Target Tabungan)
+// ============================================================
+function renderSavings(){
+  const el=document.getElementById('saving-list');if(!el)return;
+  el.innerHTML=savings.map(s=>{
+    const pct=Math.min(100,Math.round(s.collected/s.target*100));
+    const sisa=s.target-s.collected;
+    return `<div class="saving-item"><div style="display:flex;justify-content:space-between;align-items:center"><div><div class="saving-name">${s.name}</div><div class="saving-sub">${fRp(s.collected)} / ${fRp(s.target)}</div>${s.deadline?`<div style="font-size:11px;color:var(--text3);margin-top:2px">📅 ${s.deadline}</div>`:''}</div><div style="display:flex;flex-direction:column;gap:4px;flex-shrink:0"><button class="btn-icon" onclick="updateSaving('${s.id}')">💵</button><button class="btn-icon" onclick="editSaving('${s.id}')">✏️</button><button class="btn-icon" onclick="delSaving('${s.id}')">🗑️</button></div></div><div style="margin-top:8px"><div class="prog-bar"><div class="prog-fill pf-green" style="width:${pct}%"></div></div><div style="font-size:11px;color:var(--text3);margin-top:3px">${pct}% terkumpul${pct<100?' • Kurang: '+fRp(sisa):' ✅ Tercapai!'}</div></div></div>`;
+  }).join('')||'<div class="empty" style="padding:16px"><span class="empty-icon" style="font-size:28px">💰</span><p>Belum ada target tabungan.</p></div>';
+}
+function editSaving(id){
+  const s=savings.find(x=>x.id===id)||{};
+  document.getElementById('ms-id').value=id;document.getElementById('ms-name').value=s.name||'';
+  document.getElementById('ms-target').value=s.target||'';document.getElementById('ms-collected').value=s.collected||0;
+  document.getElementById('ms-deadline').value=s.deadline||'';
+  document.getElementById('msav-title').textContent='✏️ Edit Target Tabungan';
+  openOv('saving');
+}
+function updateSaving(id){
+  const s=savings.find(x=>x.id===id);if(!s)return;
+  document.getElementById('msu-id').value=id;
+  document.getElementById('msu-collected').value=s.collected||0;
+  document.getElementById('msu-info').textContent=s.name+' — Target: '+fRp(s.target);
+  openOv('saving-update');
+}
+function delSaving(id){if(!confirm('Hapus target ini?'))return;savings=savings.filter(x=>x.id!==id);sv(K.savings,savings);renderSavings();toast('🗑️ Target dihapus');}
+document.getElementById('btn-add-saving').onclick=()=>{document.getElementById('ms-id').value='';document.getElementById('ms-name').value='';document.getElementById('ms-target').value='';document.getElementById('ms-collected').value=0;document.getElementById('ms-deadline').value='';document.getElementById('msav-title').textContent='💰 Target Tabungan Baru';openOv('saving');};
+document.getElementById('btn-save-saving').onclick=()=>{
+  const name=document.getElementById('ms-name').value.trim();
+  const target=parseFloat(document.getElementById('ms-target').value);
+  if(!name||!target)return toast('⚠️ Nama & nominal wajib diisi','var(--red)');
+  const id=document.getElementById('ms-id').value;
+  const obj={id:id||uid(),name,target,collected:parseFloat(document.getElementById('ms-collected').value)||0,deadline:document.getElementById('ms-deadline').value};
+  if(id)savings=savings.map(s=>s.id===id?obj:s);else savings.push(obj);
+  sv(K.savings,savings);closeOv();renderSavings();toast('💾 Target disimpan!');
+};
+document.getElementById('btn-save-saving-update').onclick=()=>{
+  const id=document.getElementById('msu-id').value;
+  const collected=parseFloat(document.getElementById('msu-collected').value)||0;
+  savings=savings.map(s=>s.id===id?{...s,collected}:s);
+  sv(K.savings,savings);closeOv();renderSavings();toast('💵 Tabungan diperbarui!');
+  const s=savings.find(x=>x.id===id);if(s&&s.collected>=s.target){toast('🎉 Target '+s.name+' TERCAPAI!','var(--green)');confetti();}
+};
+
+// ============================================================
+// GOALS (Target & Cita-Cita)
+// ============================================================
+function renderGoalCats(){
+  const el=document.getElementById('goalcat-list');if(!el)return;
+  el.innerHTML=goalCats.map(c=>`<div class="cat-tag">${c.icon} ${c.name}<button class="btn-icon" style="font-size:11px;padding:0 2px;margin-left:2px" onclick="delGoalCat('${c.id}')">✕</button></div>`).join('')||'<div style="font-size:12px;color:var(--text3)">Belum ada kategori.</div>';
+  // Filter tags
+  const fEl=document.getElementById('goals-filter');
+  if(fEl){
+    fEl.innerHTML=`<div class="cat-tag ${goalFilter==='all'?'active':''}" onclick="setGoalFilter('all')">Semua</div>`+goalCats.map(c=>`<div class="cat-tag ${goalFilter===c.id?'active':''}" onclick="setGoalFilter('${c.id}')">${c.icon} ${c.name}</div>`).join('');
+  }
+  // Goal cat select
+  const sel=document.getElementById('mg-cat');if(sel)sel.innerHTML='<option value="">-- Pilih Kategori --</option>'+goalCats.map(c=>`<option value="${c.id}">${c.icon} ${c.name}</option>`).join('');
+}
+function setGoalFilter(id){goalFilter=id;renderGoals();}
+function delGoalCat(id){if(!confirm('Hapus kategori ini?'))return;goalCats=goalCats.filter(c=>c.id!==id);sv(K.goalCats,goalCats);renderGoals();}
+document.getElementById('btn-add-goalcat').onclick=()=>{document.getElementById('mgc-name').value='';document.getElementById('mgc-icon').value='🎯';document.getElementById('mgc-id').value='';openOv('goalcat');};
+document.getElementById('btn-save-goalcat').onclick=()=>{
+  const name=document.getElementById('mgc-name').value.trim();
+  const icon=document.getElementById('mgc-icon').value||'🎯';
+  if(!name)return;
+  const id=document.getElementById('mgc-id').value;
+  if(id)goalCats=goalCats.map(c=>c.id===id?{...c,name,icon}:c);else goalCats.push({id:uid(),name,icon});
+  sv(K.goalCats,goalCats);closeOv();renderGoals();toast('💾 Kategori disimpan!');
+};
+function renderGoals(){
+  renderGoalCats();
+  let list=goalFilter==='all'?goals:goals.filter(g=>g.catId===goalFilter);
+  const el=document.getElementById('goals-list');if(!el)return;
+  el.innerHTML=list.map(g=>{
+    const pct=g.target>0?Math.min(100,Math.round(g.current/g.target*100)):0;
+    const cat=goalCats.find(c=>c.id===g.catId);
+    const done=g.current>=g.target;
+    const pfColor=done?'pf-green':'pf-purple';
+    return `<div class="goal-item" style="${done?'border-color:rgba(52,211,153,.3)':''}"><div class="goal-hd"><span class="goal-icon">${cat?cat.icon:'🎯'}</span><span class="goal-name">${g.name}</span>${cat?`<span class="goal-cat">${cat.name}</span>`:''}</div><div style="display:flex;justify-content:space-between;font-size:12px;color:var(--text2);margin-bottom:6px"><span>${g.current} / ${g.target} ${g.unit||''}</span><span style="font-family:var(--font-mono);color:var(--cyan)">${pct}%</span></div><div class="prog-bar" style="margin-bottom:8px"><div class="prog-fill ${pfColor}" style="width:${pct}%"></div></div>${g.deadline?`<div style="font-size:11px;color:var(--text3);margin-bottom:8px">📅 Deadline: ${g.deadline}</div>`:''}<div style="display:flex;gap:6px">${!done?`<button class="btn btn-cyan btn-sm" onclick="updateGoalProgress('${g.id}')">📈 UPDATE</button>`:'<span style="font-size:12px;color:var(--green)">✅ Tercapai!</span>'}<button class="btn btn-ghost btn-sm" onclick="editGoal('${g.id}')">✏️</button><button class="btn btn-red btn-sm" onclick="delGoal('${g.id}')">🗑️</button></div></div>`;
+  }).join('')||'<div class="empty"><span class="empty-icon">🎯</span><p>Belum ada target. Tambahkan cita-citamu!</p></div>';
+}
+function editGoal(id){
+  const g=goals.find(x=>x.id===id)||{};
+  document.getElementById('mg-id').value=id;document.getElementById('mg-name').value=g.name||'';
+  document.getElementById('mg-target').value=g.target||'';document.getElementById('mg-current').value=g.current||0;
+  document.getElementById('mg-unit').value=g.unit||'';document.getElementById('mg-deadline').value=g.deadline||'';
+  renderGoalCats();setTimeout(()=>{document.getElementById('mg-cat').value=g.catId||'';},10);
+  document.getElementById('mgoal-title').textContent='✏️ Edit Target';openOv('goal');
+}
+function delGoal(id){if(!confirm('Hapus target ini?'))return;goals=goals.filter(x=>x.id!==id);sv(K.goals,goals);renderGoals();toast('🗑️ Target dihapus');}
+function updateGoalProgress(id){
+  const g=goals.find(x=>x.id===id);if(!g)return;
+  document.getElementById('mgp-id').value=id;document.getElementById('mgp-current').value=g.current||0;
+  document.getElementById('mgp-info').textContent=g.name+' — Target: '+g.target+' '+g.unit;
+  openOv('goal-progress');
+}
+document.getElementById('btn-add-goal').onclick=()=>{document.getElementById('mg-id').value='';document.getElementById('mg-name').value='';document.getElementById('mg-target').value='';document.getElementById('mg-current').value=0;document.getElementById('mg-unit').value='';document.getElementById('mg-deadline').value='';document.getElementById('mgoal-title').textContent='🎯 Tambah Target';renderGoalCats();openOv('goal');};
+document.getElementById('btn-save-goal').onclick=()=>{
+  const name=document.getElementById('mg-name').value.trim();
+  const target=parseFloat(document.getElementById('mg-target').value);
+  if(!name||!target)return toast('⚠️ Nama & target wajib diisi','var(--red)');
+  const id=document.getElementById('mg-id').value;
+  const obj={id:id||uid(),name,catId:document.getElementById('mg-cat').value||'',target,current:parseFloat(document.getElementById('mg-current').value)||0,unit:document.getElementById('mg-unit').value.trim(),deadline:document.getElementById('mg-deadline').value};
+  if(id)goals=goals.map(g=>g.id===id?obj:g);else goals.push(obj);
+  sv(K.goals,goals);closeOv();renderGoals();toast('💾 Target disimpan!');checkAchievements();
+};
+document.getElementById('btn-save-goal-progress').onclick=()=>{
+  const id=document.getElementById('mgp-id').value;
+  const current=parseFloat(document.getElementById('mgp-current').value)||0;
+  goals=goals.map(g=>g.id===id?{...g,current}:g);
+  sv(K.goals,goals);closeOv();renderGoals();toast('📈 Progress diperbarui!');
+  const g=goals.find(x=>x.id===id);if(g&&g.current>=g.target){toast('🎉 Target '+g.name+' TERCAPAI!','var(--green)');confetti();addNotif('🎉 Target "'+g.name+'" tercapai!');}
+  checkAchievements();
+};
+
+// ============================================================
+// POMODORO
+// ============================================================
+function updatePomo(){
+  const total=pomoBreak?Math.round(pomoMin/5)*60:pomoMin*60;
+  const prog=1-(pomoSec/(total||1));
+  const ci=document.getElementById('pp');if(ci)ci.style.strokeDashoffset=502*prog;
+  const t=document.getElementById('pomo-time');if(t){const m=Math.floor(pomoSec/60),s=pomoSec%60;t.textContent=(m<10?'0':'')+m+':'+(s<10?'0':'')+s;}
+  document.getElementById('pomo-lbl').textContent=pomoBreak?'☕ Istirahat':(pomoRunning?'⚔️ FOKUS!':'🎯 Siap');
+}
+function renderPomo(){
+  document.getElementById('pomo-sessions').textContent=pomoDone.sessions||0;
+  const t=pomoDone.totalMin||0;document.getElementById('pomo-total').textContent=Math.floor(t/60)+'j '+(t%60)+'m';
+  updatePomo();
+  const dayIdx=new Date().getDay();const labels=[];for(let i=6;i>=0;i--)labels.push(DAY_LABELS[(dayIdx-i+7)%7]);
+  pomoChart=mkBar('pomo-chart',labels,[...weekPomo.slice(dayIdx+1),...weekPomo.slice(0,dayIdx+1)],'#22D3EE',pomoChart);
+}
+document.getElementById('btn-pomo-play').onclick=()=>{
+  if(pomoRunning){clearInterval(pomoTimer);pomoRunning=false;document.getElementById('btn-pomo-play').innerHTML='▶️ MULAI';playS('click');}
+  else{
+    pomoRunning=true;document.getElementById('btn-pomo-play').innerHTML='⏸️ PAUSE';
+    if(pomoSec===0)pomoSec=pomoMin*60;playS('click');
+    pomoTimer=setInterval(()=>{
+      if(pomoSec>0){pomoSec--;updatePomo();}
+      else{
+        clearInterval(pomoTimer);pomoRunning=false;document.getElementById('btn-pomo-play').innerHTML='▶️ MULAI';
+        if(!pomoBreak){
+          pomoDone.sessions=(pomoDone.sessions||0)+1;pomoDone.totalMin=(pomoDone.totalMin||0)+pomoMin;sv(K.pomo,pomoDone);
+          const xpGain=pomoMin>=45?25:20;addXP(xpGain);toast('🍅 Sesi selesai! +'+xpGain+' XP','var(--cyan)');playS('complete');
+          weekPomo[new Date().getDay()]=(weekPomo[new Date().getDay()]||0)+1;sv(K.weekPomo,weekPomo);
+          pomoBreak=true;pomoSec=Math.round(pomoMin/5)*60;
+        }else{pomoBreak=false;pomoSec=pomoMin*60;toast('✅ Istirahat selesai! Fokus lagi!','var(--green)');playS('click');}
+        document.getElementById('pomo-sessions').textContent=pomoDone.sessions||0;
+        const t=pomoDone.totalMin||0;document.getElementById('pomo-total').textContent=Math.floor(t/60)+'j '+(t%60)+'m';
+        updatePomo();
+      }
+    },1000);
+  }
+};
+document.getElementById('btn-pomo-reset').onclick=()=>{clearInterval(pomoTimer);pomoRunning=false;pomoSec=0;pomoBreak=false;updatePomo();document.getElementById('btn-pomo-play').innerHTML='▶️ MULAI';playS('click');};
+document.querySelectorAll('[data-pmn]').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('[data-pmn]').forEach(x=>x.classList.remove('active'));b.classList.add('active');pomoMin=parseInt(b.dataset.pmn);pomoSec=0;pomoRunning=false;clearInterval(pomoTimer);updatePomo();document.getElementById('btn-pomo-play').innerHTML='▶️ MULAI';playS('click');}));
+
+// ============================================================
+// CALENDAR
+// ============================================================
+function renderCal(){
+  const now=new Date();if(!calY){calY=now.getFullYear();calM=now.getMonth();}
+  const months=['JANUARI','FEBRUARI','MARET','APRIL','MEI','JUNI','JULI','AGUSTUS','SEPTEMBER','OKTOBER','NOVEMBER','DESEMBER'];
+  document.getElementById('cal-lbl').textContent=months[calM]+' '+calY;
+  const fd=new Date(calY,calM,1).getDay(),dim=new Date(calY,calM+1,0).getDate();
+  let h=['M','S','S','R','K','J','S'].map(d=>`<div class="cal-head">${d}</div>`).join('');
+  for(let i=0;i<fd;i++)h+=`<div class="cal-day empty"></div>`;
+  for(let d=1;d<=dim;d++){
+    const isT=d===now.getDate()&&calM===now.getMonth()&&calY===now.getFullYear();
+    const dk=calY+'-'+(calM+1)+'-'+d;
+    const log=habitLog[dk]||{};
+    const pct=habits.length?habits.filter(hb=>log[hb.id]).length/habits.length:0;
+    let cls='';if(pct>=.8)cls='ph ph-h';else if(pct>=.4)cls='ph ph-m';else if(Object.keys(log).length>0)cls='ph ph-l';
+    h+=`<div class="cal-day ${isT?'today':cls}">${d}</div>`;
+  }
+  document.getElementById('cal-grid').innerHTML=h;
+}
+document.getElementById('cal-prev').onclick=()=>{calM--;if(calM<0){calM=11;calY--;}renderCal();};
+document.getElementById('cal-next').onclick=()=>{calM++;if(calM>11){calM=0;calY++;}renderCal();};
+
+// ============================================================
+// ACHIEVEMENTS
+// ============================================================
+let achFilter='all';
+function renderAchievements(){
+  const earned=earnedAch.length,total=ACH_DEF.length;
+  const pct=Math.round(earned/total*100);
+  document.getElementById('ach-pct').textContent=pct+'%';
+  document.getElementById('ach-prog').style.width=pct+'%';
+  const list=achFilter==='all'?ACH_DEF:ACH_DEF.filter(a=>a.cat===achFilter);
+  document.getElementById('ach-list').innerHTML=list.map(a=>{const e=earnedAch.includes(a.id);return `<div class="ach-tile ${e?'earned':''}"><div class="ach-icon">${a.icon}</div><div class="ach-name">${a.name}</div><div class="ach-desc">${a.desc}</div>${e?`<div style="font-family:var(--font-mono);font-size:10px;color:var(--green);margin-top:4px">+${a.xp} XP ✓</div>`:''}</div>`;}).join('');
+}
+document.querySelectorAll('#ach-tabs .tab').forEach(b=>b.addEventListener('click',()=>{document.querySelectorAll('#ach-tabs .tab').forEach(x=>x.classList.remove('active'));b.classList.add('active');achFilter=b.dataset.at;renderAchievements();playS('click');}));
+
+// ============================================================
+// SETTINGS
+// ============================================================
+function renderSettings(){
+  document.getElementById('set-name').value=profile.name||'';
+  document.getElementById('set-univ').value=profile.univ||'';
+  document.getElementById('set-prodi').value=profile.prodi||'';
+}
+document.getElementById('btn-save-profile').onclick=()=>{
+  profile={name:document.getElementById('set-name').value.trim(),univ:document.getElementById('set-univ').value.trim(),prodi:document.getElementById('set-prodi').value.trim()};
+  sv(K.profile,profile);toast('💾 Profil disimpan!');renderDash();
+};
+document.getElementById('btn-export').onclick=()=>{
+  const data={habits,hdone,fins,finCats,savings,goals,goalCats,healthData,ibdone,profile,xp,streak,earnedAch,olahragaLog,weekXP,weekPomo,habitLog,pomoDone};
+  const b=new Blob([JSON.stringify(data)],{type:'application/json'});const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download='mydailyquest_backup.json';a.click();toast('📤 Data berhasil diexport!');
+};
+document.getElementById('btn-import-btn').onclick=()=>document.getElementById('btn-import').click();
+document.getElementById('btn-import').addEventListener('change',e=>{
+  const file=e.target.files[0];if(!file)return;
+  const reader=new FileReader();reader.onload=ev=>{
+    try{
+      const d=JSON.parse(ev.target.result);
+      if(d.habits){habits=d.habits;sv(K.habits,habits);}
+      if(d.fins){fins=d.fins;sv(K.fin,fins);}
+      if(d.finCats){finCats=d.finCats;sv(K.finCats,finCats);}
+      if(d.savings){savings=d.savings;sv(K.savings,savings);}
+      if(d.goals){goals=d.goals;sv(K.goals,goals);}
+      if(d.goalCats){goalCats=d.goalCats;sv(K.goalCats,goalCats);}
+      if(d.healthData){healthData=d.healthData;sv(K.health,healthData);}
+      if(d.profile){profile=d.profile;sv(K.profile,profile);}
+      if(d.xp!==undefined){xp=d.xp;sv(K.xp,xp);}
+      if(d.earnedAch){earnedAch=d.earnedAch;sv(K.earned,earnedAch);}
+      if(d.olahragaLog){olahragaLog=d.olahragaLog;sv(K.olahraga,olahragaLog);}
+      toast('📥 Import berhasil!','var(--green)');renderDash();
+    }catch{toast('❌ File tidak valid!','var(--red)');}
+  };reader.readAsText(file);e.target.value='';
+});
+document.getElementById('btn-reset').onclick=()=>{
+  if(!confirm('Reset semua data? Tidak bisa dibatalkan!'))return;
+  Object.values(K).forEach(k=>localStorage.removeItem(k));location.reload();
+};
+
+// ============================================================
+// INIT
+// ============================================================
+updatePomo();
+checkAchievements();
+renderDash();
+
+// Fix: Set default date for finance inputs on page load
+document.addEventListener('DOMContentLoaded',()=>{});
+
+</script>
+</body>
+</html>
